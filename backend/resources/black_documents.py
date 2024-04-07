@@ -1,17 +1,32 @@
+from dotenv import load_dotenv
+import os
+import base64
 from flask import request, jsonify
 from flask_restful import Resource
 from inference_sdk import InferenceHTTPClient
-from dotenv import load_dotenv
-import base64
-import os
 
 load_dotenv()
 
 class BlackDocumentsDetectorModel(Resource):
+    """
+    A Flask RESTful resource for detecting black documents using a pre-trained model.
+
+    This resource accepts a POST request with an image file and returns the inference results.
+
+    Attributes:
+        CLIENT (InferenceHTTPClient): An instance of the InferenceHTTPClient class for making API requests.
+    """
+
     def post(self):
+        """
+        Handles the POST request for detecting black documents.
+
+        Returns:
+            A JSON response containing the inference results.
+        """
         CLIENT = InferenceHTTPClient(
             api_url="https://detect.roboflow.com",
-            api_key= os.getenv("ROBOFLOW_API_KEY")
+            api_key=os.getenv("ROBOFLOW_API_KEY")
         )
 
         print(request.files)
