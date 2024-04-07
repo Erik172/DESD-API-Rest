@@ -13,13 +13,17 @@ st.set_page_config(
     initial_sidebar_state="auto",
 )
 
-st.title('Black Document Detector 📄')
-# upload image or select folder with images
-uploaded_file = st.file_uploader("Choose an image...", type=["jpg", "jpeg", "png", "webp", "bmp", "tiff", "gif"], accept_multiple_files=True)
-pdf_file = st.file_uploader("Choose a PDF file...", type=["pdf"], accept_multiple_files=False)
-show_image = st.checkbox("Show image", value=False)
+def process_uploaded_images(uploaded_file, show_image):
+    """
+    Process the uploaded images and display the results.
 
-if uploaded_file:
+    Args:
+        uploaded_file (list): List of uploaded image files.
+        show_image (bool): Flag indicating whether to show the uploaded image.
+
+    Returns:
+        None
+    """
     metrics = list()
     with st.spinner("Processing..."):
         for file in uploaded_file:
@@ -39,7 +43,17 @@ if uploaded_file:
             if show_image:
                 st.image(image, use_column_width=True, caption="Uploaded Image")
 
-if pdf_file:
+def process_pdf_file(pdf_file, show_image):
+    """
+    Process the uploaded PDF file and display the results.
+
+    Args:
+        pdf_file (file): Uploaded PDF file.
+        show_image (bool): Flag indicating whether to show the image from the PDF.
+
+    Returns:
+        None
+    """
     st.caption(pdf_file.name)
     pdf = pdf_file.read()
     images = convert_from_bytes(pdf)
@@ -61,3 +75,15 @@ if pdf_file:
                 st.image(image_path, use_column_width=True, caption=pdf_file.name, output_format="JPEG")
 
             os.remove(image_path)
+
+st.title('Black Document Detector 📄')
+# upload image or select folder with images
+uploaded_file = st.file_uploader("Choose an image...", type=["jpg", "jpeg", "png", "webp", "bmp", "tiff", "gif"], accept_multiple_files=True)
+pdf_file = st.file_uploader("Choose a PDF file...", type=["pdf"], accept_multiple_files=False)
+show_image = st.checkbox("Show image", value=False)
+
+if uploaded_file:
+    process_uploaded_images(uploaded_file, show_image)
+
+if pdf_file:
+    process_pdf_file(pdf_file, show_image)
