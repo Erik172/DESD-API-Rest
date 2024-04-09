@@ -6,3 +6,5 @@ streamlit
 inference
 python-dotenv
 pandas
+torch
+ultralytics>=8.1.45
