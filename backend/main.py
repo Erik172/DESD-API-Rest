@@ -7,6 +7,9 @@ from resources import (
     TilDeV2
 )
 
+# from resources.black_documents import BlackDocumentsDetectorModel
+# from resources.TilDe import TilDeV1, TilDeV2
+
 app = Flask(__name__)
 api = Api(app)
             
