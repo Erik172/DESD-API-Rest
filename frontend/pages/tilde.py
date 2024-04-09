@@ -1,5 +1,7 @@
 from pdf2image import convert_from_bytes
+import matplotlib.pyplot as plt
 import streamlit as st
+import pandas as pd
 import requests
 import os
 
@@ -12,7 +14,10 @@ st.set_page_config(
     initial_sidebar_state="auto"
 )
 
+dataframe = pd.DataFrame(columns=["file", "Prediction", "Confidence", "Time"])
+
 def process_uploaded_images(uploaded_file, show_image, version="v1"):
+    global dataframe
     with st.spinner("Processing..."):
         for file in uploaded_file:
             image = file.read()
@@ -29,12 +34,14 @@ def process_uploaded_images(uploaded_file, show_image, version="v1"):
                 prediction, confidence = st.columns(2)
                 prediction.metric("Prediction", response['data'][0]['name'])
                 confidence.metric("Confidence", round(response['data'][0]['confidence'], 4))
+                dataframe = dataframe.append({"file": file.name, "Prediction": response['data'][0]['name'], "Confidence": round(response['data'][0]['confidence'], 4)}, ignore_index=True)
 
             if version == "v2":
                 prediction, confidence, time = st.columns(3)
                 prediction.metric("Prediction", response["top"])
                 confidence.metric("Confidence", response["confidence"])
                 time.metric("Time", round(response["time"], 3), "seconds")
+                dataframe = dataframe.append({"file": file.name, "Prediction": response["top"], "Confidence": response["confidence"], "Time": round(response["time"], 3)}, ignore_index=True)
 
             
             if show_image:
@@ -42,7 +49,31 @@ def process_uploaded_images(uploaded_file, show_image, version="v1"):
             print(response)
             st.divider()
 
+        if dataframe.shape[0] > 0:
+            with st.container():
+                st.dataframe(dataframe)
+                # st.download_button(
+                #     label="Download predictions",
+                #     data=dataframe.to_csv(index=False),
+                #     file_name="predictions.csv",
+                #     mime="text/csv"
+                # )
+
+                # st.line_chart(dataframe["Confidence"], use_container_width=True, height=300, x=dataframe["file"].tolist())
+                plt.rcParams["figure.figsize"] = (12, 5)
+                fig, ax = plt.subplots()
+                ax.bar(dataframe["file"], dataframe["Confidence"])
+                ax.set_xlabel("File")
+                ax.set_ylabel("Confidence")
+                ax.set_title("Confidence of Predictions")
+                ax.set_xticklabels(dataframe["file"], rotation=45)
+                # ax.grid(True)
+                st.pyplot(fig)
+
+            
+
 def process_pdf_file(uploaded_file, show_image, version="v1"):
+    global dataframe
     with st.spinner("Processing..."):
         images = convert_from_bytes(uploaded_file.read())
         for i, image in enumerate(images):
@@ -62,12 +93,16 @@ def process_pdf_file(uploaded_file, show_image, version="v1"):
                 prediction, confidence = st.columns(2)
                 prediction.metric("Prediction", response['data'][0]['name'])
                 confidence.metric("Confidence", round(response['data'][0]['confidence'], 4))
+                dataframe = dataframe.append({"file": f'Page {i + 1}', "Prediction": response['data'][0]['name'], "Confidence": round(response['data'][0]['confidence'], 4)}, ignore_index=True)
+
 
             if version == "v2":
                 prediction, confidence, time = st.columns(3)
                 prediction.metric("Prediction", response["top"])
                 confidence.metric("Confidence", response["confidence"])
                 time.metric("Time", round(response["time"], 3), "seconds")
+                dataframe = dataframe.append({"file": f'Page {i + 1}', "Prediction": response["top"], "Confidence": response["confidence"], "Time": round(response["time"], 3)}, ignore_index=True)
+
 
             if show_image:
                 st.image(image_path, use_column_width=True, caption="Uploaded Image", output_format="JPEG")
@@ -76,8 +111,29 @@ def process_pdf_file(uploaded_file, show_image, version="v1"):
                 os.remove(f"temp_{i}.jpg")
             except PermissionError:
                 print("PermissionError: Unable to delete the temporary file.")
-    
+
             st.divider()
+
+        if dataframe.shape[0] > 0:
+            with st.container():
+                st.dataframe(dataframe)
+                # st.download_button(
+                #     label="Download predictions",
+                #     data=dataframe.to_csv(index=False),
+                #     file_name="predictions.csv",
+                #     mime="text/csv"
+                # )
+
+                # st.line_chart(dataframe["Confidence"], use_container_width=True, height=300, x=dataframe["file"].tolist())
+                plt.rcParams["figure.figsize"] = (12, 5)
+                fig, ax = plt.subplots()
+                ax.bar(dataframe["file"], dataframe["Confidence"])
+                ax.set_xlabel("File")
+                ax.set_ylabel("Confidence")
+                ax.set_title("Confidence of Predictions")
+                ax.set_xticklabels(dataframe["file"], rotation=45)
+                # ax.grid(True)
+                st.pyplot(fig)
 
 def main():
     st.title("TilDe (Tilted Detection) 📐")
