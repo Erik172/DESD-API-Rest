@@ -25,7 +25,7 @@ def process_uploaded_images(uploaded_file, show_image, version="v1"):
             response = requests.post(API_URL, files={"image": image})
             response = response.json()
 
-            st.caption(file.name)
+            st.caption(file.name)   
 
             if version == "v1":
                 st.progress(response['data'][0]['confidence'], f"{response['data'][0]['name']}, {round(response['data'][0]['confidence'], 3)}")
@@ -52,12 +52,6 @@ def process_uploaded_images(uploaded_file, show_image, version="v1"):
         if dataframe.shape[0] > 0:
             with st.container():
                 st.dataframe(dataframe)
-                # st.download_button(
-                #     label="Download predictions",
-                #     data=dataframe.to_csv(index=False),
-                #     file_name="predictions.csv",
-                #     mime="text/csv"
-                # )
 
                 # st.line_chart(dataframe["Confidence"], use_container_width=True, height=300, x=dataframe["file"].tolist())
                 plt.rcParams["figure.figsize"] = (12, 5)
@@ -77,9 +71,9 @@ def process_pdf_file(uploaded_file, show_image, version="v1"):
     with st.spinner("Processing..."):
         images = convert_from_bytes(uploaded_file.read())
         for i, image in enumerate(images):
-            image.save(f"temp_{i}.jpg")
-            image_path = f"temp_{i}.jpg"
-            image = open(f"temp_{i}.jpg", "rb")
+            image.save(f"temp/temp_{i}.jpg")
+            image_path = f"temp/temp_{i}.jpg"
+            image = open(f"temp/temp_{i}.jpg", "rb")
             API_URL = f"{API_URL_BASE}/{version}"
             response = requests.post(API_URL, files={"image": image})
             response = response.json()
@@ -108,7 +102,7 @@ def process_pdf_file(uploaded_file, show_image, version="v1"):
                 st.image(image_path, use_column_width=True, caption="Uploaded Image", output_format="JPEG")
             
             try:
-                os.remove(f"temp_{i}.jpg")
+                os.remove(f"temp/temp_{i}.jpg")
             except PermissionError:
                 print("PermissionError: Unable to delete the temporary file.")
 
@@ -117,12 +111,6 @@ def process_pdf_file(uploaded_file, show_image, version="v1"):
         if dataframe.shape[0] > 0:
             with st.container():
                 st.dataframe(dataframe)
-                # st.download_button(
-                #     label="Download predictions",
-                #     data=dataframe.to_csv(index=False),
-                #     file_name="predictions.csv",
-                #     mime="text/csv"
-                # )
 
                 # st.line_chart(dataframe["Confidence"], use_container_width=True, height=300, x=dataframe["file"].tolist())
                 plt.rcParams["figure.figsize"] = (12, 5)
