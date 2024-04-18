@@ -16,6 +16,10 @@ st.set_page_config(
 
 dataframe = pd.DataFrame(columns=["file", "Prediction", "Confidence", "Time"])
 
+@st.cache_data()
+def convert_df(dataframe):
+    return dataframe.to_csv(index=False).encode("utf-8")
+
 def process_uploaded_images(uploaded_file, show_image, version="v1"):
     global dataframe
     with st.spinner("Processing..."):
@@ -53,6 +57,15 @@ def process_uploaded_images(uploaded_file, show_image, version="v1"):
             with st.container():
                 st.dataframe(dataframe)
 
+                csv = convert_df(dataframe)
+
+                st.download_button(
+                    label="Download data as CSV",
+                    data=csv,
+                    file_name=f'{file.name}_results.csv', # 'tilde_results.csv'
+                    mime='text/csv',
+                )
+
                 # st.line_chart(dataframe["Confidence"], use_container_width=True, height=300, x=dataframe["file"].tolist())
                 plt.rcParams["figure.figsize"] = (12, 5)
                 fig, ax = plt.subplots()
@@ -63,8 +76,6 @@ def process_uploaded_images(uploaded_file, show_image, version="v1"):
                 ax.set_xticklabels(dataframe["file"], rotation=45)
                 # ax.grid(True)
                 st.pyplot(fig)
-
-            
 
 def process_pdf_file(uploaded_file, show_image, version="v1"):
     global dataframe
@@ -112,6 +123,15 @@ def process_pdf_file(uploaded_file, show_image, version="v1"):
             with st.container():
                 st.dataframe(dataframe)
 
+                csv = convert_df(dataframe)
+
+                st.download_button(
+                    label="Download data as CSV",
+                    data=csv,
+                    file_name=f'{uploaded_file.name}_results.csv', # 'tilde_results.csv'
+                    mime='text/csv',
+                )
+
                 # st.line_chart(dataframe["Confidence"], use_container_width=True, height=300, x=dataframe["file"].tolist())
                 plt.rcParams["figure.figsize"] = (12, 5)
                 fig, ax = plt.subplots()
@@ -126,18 +146,18 @@ def process_pdf_file(uploaded_file, show_image, version="v1"):
 def main():
     st.title("TilDe (Tilted Detection) 📐")
     st.markdown("This page allows you to detect tilted documents using the TilDe model.")
-    st.markdown("**V1:** __YOLOv8n-CLS (Ultralytics)__ - This version of the model offers better performance, but it has a more complex architecture and slower inference time.")
-    st.markdown("**V2:** __MobileNetV2 (Roboflow)__ - This version of the model is smaller, resulting in faster inference time, but it may have lower performance compared to V1.")
+    # st.markdown("**V1:** __YOLOv8n-CLS (Ultralytics)__ - This version of the model offers better performance, but it has a more complex architecture and slower inference time.")
+    # st.markdown("**V2:** __MobileNetV2 (Roboflow)__ - This version of the model is smaller, resulting in faster inference time, but it may have lower performance compared to V1.")
 
     version = st.selectbox(
         "Select the version of the model to use",
         ("v1", "v2")
     )
     
-    show_image = st.checkbox("Show uploaded image(s)", value=True)
+    show_image = st.checkbox("Show uploaded image(s)", value=False)
     uploaded_file = st.file_uploader("Upload image(s)", type=["jpg", "jpeg", "png", "tif", "tiff"], accept_multiple_files=True)
     uploaded_pdf = st.file_uploader("Upload PDF file", type=["pdf"], accept_multiple_files=False)
-    
+
     if uploaded_file:
         process_uploaded_images(uploaded_file, show_image, version)
     if uploaded_pdf:

@@ -2,7 +2,6 @@ from flask import Flask
 from flask_restful import Api
 
 from resources import (
-    BlackDocumentsDetectorModel,
     TilDeV1,
     TilDeV1Remote,
     TilDeV2
@@ -11,7 +10,6 @@ from resources import (
 app = Flask(__name__)
 api = Api(app)
             
-api.add_resource(BlackDocumentsDetectorModel, "/black-documents-detector")
 api.add_resource(TilDeV1, "/tilde/v1")
 api.add_resource(TilDeV1Remote, "/tilde/v1/remote")
 api.add_resource(TilDeV2, "/tilde/v2")
