@@ -10,11 +10,17 @@
       - [Inicio del Servidor Backend](#inicio-del-servidor-backend)
       - [Inicio del Servior Frontend](#inicio-del-servior-frontend)
   - [Usage](#usage)
-  - [Endpoints](#endpoints)
+  - [API Endpoints](#api-endpoints)
+    - [Detalles de los Endpoints](#detalles-de-los-endpoints)
+      - [`/TilDeV1` (POST)](#tildev1-post)
   - [Models](#models)
     - [TilDeV1 (Tilted Detection Version 1)](#tildev1-tilted-detection-version-1)
 
 ## Description
+DESD (Detection Errors Scanned Documents) es una API Rest que permite detectar errores en documentos escaneados. Actualmente, la API cuenta con un modelo de detección de inclinación de documentos escaneados, el cual es capaz de detectar si un documento está inclinado o no.
+
+La API está implementada en Python utilizando el framework Flask y se encuentra alojada en un contenedor Docker. Además, cuenta con una interfaz web desarrollada con Streamlit que permite interactuar con la API de forma visual.
+
 ## Installation
 ### Ejecución con Docker
 
@@ -80,7 +86,43 @@ streamlit run frontend/main.py --server.port=80 --server.address=0.0.0.0
 Esto iniciará la interfaz web en el puerto 80, la cual hará peticiones a la API del backend en el puerto 5000. Para acceder a la interfaz, abre tu navegador y dirígete a `http://localhost`.
 
 ## Usage
-## Endpoints
+## API Endpoints
+
+La API consta de los siguientes endpoints:
+
+| Endpoint | Método | Descripción | Parámetros | Respuesta |
+| --- | --- | --- | --- | --- |
+| `/TilDeV1` | POST | Realiza la detección de inclinación en documentos escaneados. | `image` (multipart/form-data) | Un objeto JSON con un array `data` que contiene objetos con `name` (nombre de la clase) y `confidence` (confianza de la predicción). |
+
+### Detalles de los Endpoints
+
+#### `/TilDeV1` (POST)
+
+Este endpoint acepta una imagen de un documento escaneado y devuelve la detección de inclinación.
+
+**Parámetros:**
+
+- `image`: Un archivo de imagen en formato multipart/form-data.
+
+**Respuesta:**
+
+Devuelve un objeto JSON con un array `data` que contiene objetos con los siguientes campos:
+
+- `name`: El nombre de la clase detectada.
+- `confidence`: La confianza de la predicción.
+
+*Ejemplo de respuesta:*
+
+```json
+{
+    "data": [
+        {
+            "name": "Tilted",
+            "confidence": 0.98
+        }
+    ]
+}
+```
 ## Models
 table of all models
 | Model | Description | Accuracy | Precision |
