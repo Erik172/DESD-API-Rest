@@ -1,0 +1,6 @@
+streamlit
+python-dotenv
+pandas
+pdf2image
+matplotlib
+opencv-python

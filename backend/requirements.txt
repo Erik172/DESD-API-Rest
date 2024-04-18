@@ -1,8 +1,5 @@
 Flask
 flask-restful
-flask-cors
-flask-jwt-extended
-streamlit
 inference
 python-dotenv
 pandas
