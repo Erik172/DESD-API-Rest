@@ -12,14 +12,16 @@
   - [Usage](#usage)
   - [API Endpoints](#api-endpoints)
     - [Detalles de los Endpoints](#detalles-de-los-endpoints)
-      - [`/TilDeV1` (POST)](#tildev1-post)
+      - [`/tilde/v1` (POST)](#tildev1-post)
+      - [`/rode/v1` (POST)](#rodev1-post)
   - [Models](#models)
     - [TilDeV1 (Tilted Detection Version 1)](#tildev1-tilted-detection-version-1)
+    - [RoDeV1 (Rotation Detection Version 1)](#rodev1-rotation-detection-version-1)
 
 ## Description
-DESD (Detection Errors Scanned Documents) es una API Rest que permite detectar errores en documentos escaneados. Actualmente, la API cuenta con un modelo de detección de inclinación de documentos escaneados, el cual es capaz de detectar si un documento está inclinado o no.
+**DESD (Detection Errors Scanned Documents)** es una _API Rest_ que permite detectar errores en documentos escaneados, como inclinación y rotación. La API cuenta con diferentes modelos de detección de errores, los cuales pueden ser utilizados a través de endpoints específicos.
 
-La API está implementada en Python utilizando el framework Flask y se encuentra alojada en un contenedor Docker. Además, cuenta con una interfaz web desarrollada con Streamlit que permite interactuar con la API de forma visual.
+La aplicación cuenta con una interfaz web que permite interactuar con la API de forma visual. La interfaz permite subir una imagen de un documento escaneado y obtener la detección de errores en la misma.
 
 ## Installation
 ### Ejecución con Docker
@@ -86,17 +88,20 @@ streamlit run frontend/main.py --server.port=80 --server.address=0.0.0.0
 Esto iniciará la interfaz web en el puerto 80, la cual hará peticiones a la API del backend en el puerto 5000. Para acceder a la interfaz, abre tu navegador y dirígete a `http://localhost`.
 
 ## Usage
+
+La aplicación cuenta con una interfaz web que permite interactuar con la API de forma visual. Para acceder a la interfaz, abre tu navegador y dirígete a `http://<ip>` (si estás ejecutando la aplicación localmente, utiliza `http://localhost`).
 ## API Endpoints
 
 La API consta de los siguientes endpoints:
 
 | Endpoint | Método | Descripción | Parámetros | Respuesta |
 | --- | --- | --- | --- | --- |
-| `/TilDeV1` | POST | Realiza la detección de inclinación en documentos escaneados. | `image` (multipart/form-data) | Un objeto JSON con un array `data` que contiene objetos con `name` (nombre de la clase) y `confidence` (confianza de la predicción). |
+| `/tilde/v1` | POST | Detección de inclinación en documentos escaneados. | `image` (multipart/form-data) | JSON con la detección de inclinación. |
+| `/rode/v1` | POST | Detección de rotación en documentos escaneados. | `image` (multipart/form-data) | JSON con la detección de rotación. |
 
 ### Detalles de los Endpoints
 
-#### `/TilDeV1` (POST)
+#### `/tilde/v1` (POST)
 
 Este endpoint acepta una imagen de un documento escaneado y devuelve la detección de inclinación.
 
@@ -111,23 +116,92 @@ Devuelve un objeto JSON con un array `data` que contiene objetos con los siguien
 - `name`: El nombre de la clase detectada.
 - `confidence`: La confianza de la predicción.
 
+**Ejemplo de petición:**
+
+```bash
+curl -X POST -F "image=@image.png" http://localhost:5000/tilde/v1
+```
+
+```python
+import requests
+
+url = "http://localhost:5000/tilde/v1"
+files = {"image": open("image.png", "rb")}
+response = requests.post(url, files=files)
+
+print(response.json())
+```
+
 *Ejemplo de respuesta:*
 
 ```json
 {
     "data": [
         {
-            "name": "Tilted",
-            "confidence": 0.98
+            "confidence": 0.57,
+            "name": "no tilted"
+        },
+        {
+            "confidence": 0.43,
+            "name": "tilted"
         }
     ]
 }
 ```
+
+#### `/rode/v1` (POST)
+Este endpoint acepta una imagen de un documento escaneado y devuelve la detección de rotación.
+
+**Parámetros:**
+
+- `image`: Un archivo de imagen en formato multipart/form-data.
+
+**Respuesta:**
+
+Devuelve un objeto JSON con un array `data` que contiene objetos con los siguientes campos:
+
+- `name`: El nombre de la clase detectada.
+- `confidence`: La confianza de la predicción.
+
+**Ejemplo de petición:**
+
+```bash
+curl -X POST -F "image=@image.jpg" http://localhost:5000/rode/v1
+```
+
+```python
+import requests
+
+url = "http://localhost:5000/rode/v1"
+files = {"image": open("image.jpg", "rb")}
+response = requests.post(url, files=files)
+
+print(response.json())
+```
+
+*Ejemplo de respuesta:*
+
+```json
+{
+    "data": [
+        {
+            "confidence": 0.57,
+            "name": "no_rotated"
+        },
+        {
+            "confidence": 0.43,
+            "name": "rotated"
+        }
+    ]
+}
+```
+
 ## Models
 table of all models
 | Model | Description | Accuracy | Precision |
 | --- | --- | --- | --- |
 | [TilDeV1](#TilDeV1) | Modelo de detección de inclinación en documentos escaneados. | 0.97 | 0.98 |
+| [RoDeV1](#RoDeV1) | Modelo de detección de rotación en documentos escaneados. | - | - |
 
 ### TilDeV1 (Tilted Detection Version 1)
 Modelo de detección de inclinación de documentos escaneados. Entrenado mediante fine-tuning de un modelo pre-entrenado de detección de objetos YOLOv8n y con un dataset de 319 imagenes de documentos escaneados con y sin inclinación.
@@ -136,3 +210,7 @@ Modelo de detección de inclinación de documentos escaneados. Entrenado mediant
 **Precision**: 0.98
 
 ![TilDeV1 Confusion Matrix](docs/images/TilDeV1(ConfusionMatrix).png)
+
+### RoDeV1 (Rotation Detection Version 1)
+Modelo de detección de rotación de documentos escaneados. Entrenado mediante fine-tuning de un modelo pre-entrenado de detección de objetos YOLOv8n y con un dataset de 237 imagenes de documentos escaneados con y sin rotación.
+
