@@ -201,7 +201,7 @@ table of all models
 | Model | Description | Accuracy | Precision |
 | --- | --- | --- | --- |
 | [TilDeV1](#TilDeV1) | Modelo de detección de inclinación en documentos escaneados. | 0.97 | 0.98 |
-| [RoDeV1](#RoDeV1) | Modelo de detección de rotación en documentos escaneados. | - | - |
+| [RoDeV1](#RoDeV1) | Modelo de detección de rotación en documentos escaneados. | 0.96 | 0.94 |
 
 ### TilDeV1 (Tilted Detection Version 1)
 Modelo de detección de inclinación de documentos escaneados. Entrenado mediante fine-tuning de un modelo pre-entrenado de detección de objetos YOLOv8n y con un dataset de 319 imagenes de documentos escaneados con y sin inclinación.
@@ -214,3 +214,8 @@ Modelo de detección de inclinación de documentos escaneados. Entrenado mediant
 ### RoDeV1 (Rotation Detection Version 1)
 Modelo de detección de rotación de documentos escaneados. Entrenado mediante fine-tuning de un modelo pre-entrenado de detección de objetos YOLOv8n y con un dataset de 237 imagenes de documentos escaneados con y sin rotación.
 
+**Accuracy**: 0.96 \
+**Precision**: 0.94
+
+![RoDeV1 Confusion Matrix](docs/images/RoDeV1(ConfusionMatrix).png)
+![RoDeV1 Roc Curve](docs/images/RoDeV1(RocCurve).png)
