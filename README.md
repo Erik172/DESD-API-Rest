@@ -12,6 +12,7 @@
   - [Usage](#usage)
   - [API Endpoints](#api-endpoints)
     - [Detalles de los Endpoints](#detalles-de-los-endpoints)
+      - [`/audit` (POST)](#audit-post)
       - [`/tilde/v1` (POST)](#tildev1-post)
       - [`/rode/v1` (POST)](#rodev1-post)
   - [Models](#models)
@@ -96,10 +97,62 @@ La API consta de los siguientes endpoints:
 
 | Endpoint | Método | Descripción | Parámetros | Respuesta |
 | --- | --- | --- | --- | --- |
+| `/audit` | POST | Utiliza todos los modelos para detectar errores en documentos escaneados. | `image` (multipart/form-data) | JSON con la detección de errores usando todos los modelos disponibles. |
 | `/tilde/v1` | POST | Detección de inclinación en documentos escaneados. | `image` (multipart/form-data) | JSON con la detección de inclinación. |
 | `/rode/v1` | POST | Detección de rotación en documentos escaneados. | `image` (multipart/form-data) | JSON con la detección de rotación. |
 
 ### Detalles de los Endpoints
+
+#### `/audit` (POST)
+
+> :warning: **WARNING**: Actualmente no se puede seleccionar la versión del modelo. Por defecto, se utiliza la versión 1 de cada modelo.
+
+Este endpoint acepta una imagen de un documento escaneado y devuelve la detección de diferentes errores usando todos los modelos disponibles en la API.
+
+**Parámetros:**
+
+- `image`: Un archivo de imagen en formato multipart/form-data.
+
+**Respuesta:**
+
+Devuelve un objeto JSON con los errores detectados en la imagen. Cada error contiene los siguientes campos:
+
+- `name`: El nombre del error detectado.
+- `confidence`: La confianza de la predicción.
+  
+
+
+**Ejemplo de petición:**
+
+```bash
+curl -X POST -F "image=@image.png" http://localhost:5000/audit
+```
+
+```python
+import requests
+
+url = "http://localhost:5000/audit"
+files = {"image": open("image.png", "rb")}
+response = requests.post(url, files=files)
+
+print(response.json())
+```
+
+*Ejemplo de respuesta:*
+
+```json
+{
+  "rode": {
+    "confidence": 0.98,
+    "name": "rotated"
+  },
+
+  "tilde": {
+    "confidence": 0.57,
+    "name": "no tilted"
+  }
+}
+```
 
 #### `/tilde/v1` (POST)
 
