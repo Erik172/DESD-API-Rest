@@ -14,7 +14,23 @@ st.set_page_config(
     initial_sidebar_state="auto"
 )
 
+st.title("TilDe (Tilted Detection) 📐")
+st.markdown("This page allows you to detect tilted documents using the TilDe model.")
+
+version = st.selectbox(
+    "Select the version of the model to use",
+    ("v1", "v2")
+)
+
+show_image = st.checkbox("Show uploaded image(s)", value=False)
+uploaded_file = st.file_uploader("Upload image(s)", type=["jpg", "jpeg", "png", "tif", "tiff"], accept_multiple_files=True)
+uploaded_pdf = st.file_uploader("Upload PDF file", type=["pdf"], accept_multiple_files=False)
+
+
+placeholder = st.empty()
 dataframe = pd.DataFrame(columns=["file", "Prediction", "Confidence", "Time"])
+with st.container():
+    placeholder.dataframe(dataframe)    
 
 @st.cache_data()
 def convert_df(dataframe):
@@ -40,18 +56,18 @@ def process_uploaded_images(uploaded_file, show_image, version="v1"):
                 confidence.metric("Confidence", round(response['data'][0]['confidence'], 4))
                 dataframe = dataframe.append({"file": file.name, "Prediction": response['data'][0]['name'], "Confidence": round(response['data'][0]['confidence'], 4)}, ignore_index=True)
 
+                if response['data'][0]['name'] == "tilted":
+                    st.error(f':warning: La imagen "**{file.name}**" está inclinada. Por favor, enderece la imagen.')
+
             if version == "v2":
-                prediction, confidence, time = st.columns(3)
-                prediction.metric("Prediction", response["top"])
-                confidence.metric("Confidence", response["confidence"])
-                time.metric("Time", round(response["time"], 3), "seconds")
-                dataframe = dataframe.append({"file": file.name, "Prediction": response["top"], "Confidence": response["confidence"], "Time": round(response["time"], 3)}, ignore_index=True)
+                pass
 
             
             if show_image:
                 st.image(image, use_column_width=True, caption="Uploaded Image")
             print(response)
             st.divider()
+            placeholder.dataframe(dataframe)
 
         if dataframe.shape[0] > 0:
             with st.container():
@@ -74,7 +90,6 @@ def process_uploaded_images(uploaded_file, show_image, version="v1"):
                 ax.set_ylabel("Confidence")
                 ax.set_title("Confidence of Predictions")
                 ax.set_xticklabels(dataframe["file"], rotation=45)
-                # ax.grid(True)
                 st.pyplot(fig)
 
 def process_pdf_file(uploaded_file, show_image, version="v1"):
@@ -100,14 +115,12 @@ def process_pdf_file(uploaded_file, show_image, version="v1"):
                 confidence.metric("Confidence", round(response['data'][0]['confidence'], 4))
                 dataframe = dataframe.append({"file": f'Page {i + 1}', "Prediction": response['data'][0]['name'], "Confidence": round(response['data'][0]['confidence'], 4)}, ignore_index=True)
 
+                if response['data'][0]['name'] == "tilted":
+                    st.error(f':warning: La **Página {i + 1}** del PDF está inclinada. Por favor, enderece la imagen.')
+
 
             if version == "v2":
-                prediction, confidence, time = st.columns(3)
-                prediction.metric("Prediction", response["top"])
-                confidence.metric("Confidence", response["confidence"])
-                time.metric("Time", round(response["time"], 3), "seconds")
-                dataframe = dataframe.append({"file": f'Page {i + 1}', "Prediction": response["top"], "Confidence": response["confidence"], "Time": round(response["time"], 3)}, ignore_index=True)
-
+                pass
 
             if show_image:
                 st.image(image_path, use_column_width=True, caption="Uploaded Image", output_format="JPEG")
@@ -118,6 +131,7 @@ def process_pdf_file(uploaded_file, show_image, version="v1"):
                 print("PermissionError: Unable to delete the temporary file.")
 
             st.divider()
+            placeholder.dataframe(dataframe)
 
         if dataframe.shape[0] > 0:
             with st.container():
@@ -144,20 +158,6 @@ def process_pdf_file(uploaded_file, show_image, version="v1"):
                 st.pyplot(fig)
 
 def main():
-    st.title("TilDe (Tilted Detection) 📐")
-    st.markdown("This page allows you to detect tilted documents using the TilDe model.")
-    # st.markdown("**V1:** __YOLOv8n-CLS (Ultralytics)__ - This version of the model offers better performance, but it has a more complex architecture and slower inference time.")
-    # st.markdown("**V2:** __MobileNetV2 (Roboflow)__ - This version of the model is smaller, resulting in faster inference time, but it may have lower performance compared to V1.")
-
-    version = st.selectbox(
-        "Select the version of the model to use",
-        ("v1", "v2")
-    )
-    
-    show_image = st.checkbox("Show uploaded image(s)", value=False)
-    uploaded_file = st.file_uploader("Upload image(s)", type=["jpg", "jpeg", "png", "tif", "tiff"], accept_multiple_files=True)
-    uploaded_pdf = st.file_uploader("Upload PDF file", type=["pdf"], accept_multiple_files=False)
-
     if uploaded_file:
         process_uploaded_images(uploaded_file, show_image, version)
     if uploaded_pdf:

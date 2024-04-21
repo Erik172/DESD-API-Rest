@@ -14,7 +14,22 @@ st.set_page_config(
     initial_sidebar_state="auto"
 )
 
+st.title("RoDe (Rotation Detection) 🔄")
+st.markdown("This page is for detecting the rotation of images. You can upload images or PDF files to get the predictions.")
+
+version = st.selectbox(
+    "Select the version of the model to use",
+    ("v1", "v2")
+)
+    
+show_image = st.checkbox("Show uploaded image(s)", value=False)
+uploaded_file = st.file_uploader("Upload image(s)", type=["jpg", "jpeg", "png", "tif", "tiff"], accept_multiple_files=True)
+uploaded_pdf = st.file_uploader("Upload PDF file", type=["pdf"], accept_multiple_files=False)
+
+placeholder = st.empty()
 dataframe = pd.DataFrame(columns=["file", "Prediction", "Confidence", "Time"])
+with st.container():
+    placeholder.dataframe(dataframe)    
 
 @st.cache_data()
 def convert_df(dataframe):
@@ -40,18 +55,16 @@ def process_uploaded_images(uploaded_file, show_image, version="v1"):
                 confidence.metric("Confidence", round(response['data'][0]['confidence'], 4))
                 dataframe = dataframe.append({"file": file.name, "Prediction": response['data'][0]['name'], "Confidence": round(response['data'][0]['confidence'], 4)}, ignore_index=True)
 
-            if version == "v2":
-                prediction, confidence, time = st.columns(3)
-                prediction.metric("Prediction", response["top"])
-                confidence.metric("Confidence", response["confidence"])
-                time.metric("Time", round(response["time"], 3), "seconds")
-                dataframe = dataframe.append({"file": file.name, "Prediction": response["top"], "Confidence": response["confidence"], "Time": round(response["time"], 3)}, ignore_index=True)
+                if response['data'][0]['name'] == "rotated":
+                    st.error(f':warning: La imagen "**{file.name}**" está rotada. Por favor, gire la imagen.')
 
-            
+            if version == "v2":
+                pass
+
             if show_image:
                 st.image(image, use_column_width=True, caption="Uploaded Image")
-            print(response)
             st.divider()
+            placeholder.dataframe(dataframe)
 
         if dataframe.shape[0] > 0:
             with st.container():
@@ -100,14 +113,12 @@ def process_pdf_file(uploaded_file, show_image, version="v1"):
                 confidence.metric("Confidence", round(response['data'][0]['confidence'], 4))
                 dataframe = dataframe.append({"file": f'Page {i + 1}', "Prediction": response['data'][0]['name'], "Confidence": round(response['data'][0]['confidence'], 4)}, ignore_index=True)
 
+                if response['data'][0]['name'] == "rotated":
+                    st.error(f':warning: La Página **{i + 1}** en el PDF está rotada. Por favor, gire la imagen.')
+
 
             if version == "v2":
-                prediction, confidence, time = st.columns(3)
-                prediction.metric("Prediction", response["top"])
-                confidence.metric("Confidence", response["confidence"])
-                time.metric("Time", round(response["time"], 3), "seconds")
-                dataframe = dataframe.append({"file": f'Page {i + 1}', "Prediction": response["top"], "Confidence": response["confidence"], "Time": round(response["time"], 3)}, ignore_index=True)
-
+                pass
 
             if show_image:
                 st.image(image_path, use_column_width=True, caption="Uploaded Image", output_format="JPEG")
@@ -118,8 +129,10 @@ def process_pdf_file(uploaded_file, show_image, version="v1"):
                 print("PermissionError: Unable to delete the temporary file.")
 
             st.divider()
+            placeholder.dataframe(dataframe)
 
         if dataframe.shape[0] > 0:
+            
             with st.container():
                 st.dataframe(dataframe)
 
@@ -144,17 +157,6 @@ def process_pdf_file(uploaded_file, show_image, version="v1"):
                 st.pyplot(fig)
 
 def main():
-    st.title("RoDe (Rotation Detection) 🔄")
-
-    version = st.selectbox(
-        "Select the version of the model to use",
-        ("v1", "v2")
-    )
-    
-    show_image = st.checkbox("Show uploaded image(s)", value=False)
-    uploaded_file = st.file_uploader("Upload image(s)", type=["jpg", "jpeg", "png", "tif", "tiff"], accept_multiple_files=True)
-    uploaded_pdf = st.file_uploader("Upload PDF file", type=["pdf"], accept_multiple_files=False)
-
     if uploaded_file:
         process_uploaded_images(uploaded_file, show_image, version)
     if uploaded_pdf:
