@@ -49,8 +49,7 @@ def process_uploaded_images(uploaded_file, show_image):
             rotated_confidence.metric("Confidence", round(response['rode']['confidence'], 4))
 
             # dataframe = dataframe.append({"file": file.name, "Tilted": response['tilde']['name'], "Tilted Confidence": round(response['tilde']['confidence'], 4), "Rotated": response['rode']['name'], "Rotated Confidence": round(response['rode']['confidence'], 4)}, ignore_index=True)
-            dataframe = pd.concat(dataframe, pd.DataFrame({"file": file.name, "Tilted": response['tilde']['name'], "Tilted Confidence": round(response['tilde']['confidence'], 4), "Rotated": response['rode']['name'], "Rotated Confidence": round(response['rode']['confidence'], 4)}), ignore_index=True)
-
+            dataframe = pd.concat([dataframe, pd.DataFrame({"file": [file.name], "Tilted": [response['tilde']['name']], "Tilted Confidence": [round(response['tilde']['confidence'], 4)], "Rotated": [response['rode']['name']], "Rotated Confidence": [round(response['rode']['confidence'], 4)]})], ignore_index=True)
             if response['tilde']['name'] == "tilted":
                 st.error(f':warning: La imagen "**{file.name}**" está inclinada. Por favor, enderece la imagen.')
 
@@ -99,8 +98,7 @@ def process_pdf_file(uploaded_file, show_image):
             rotated_confidence.metric("Confidence", round(response['rode']['confidence'], 4))
 
             # dataframe = dataframe.append({"file": f'Page {i + 1}', "Tilted": response['tilde']['name'], "Tilted Confidence": round(response['tilde']['confidence'], 4), "Rotated": response['rode']['name'], "Rotated Confidence": round(response['rode']['confidence'], 4)}, ignore_index=True)
-            dataframe = pd.concat(dataframe, pd.DataFrame({"file": f'Page {i + 1}', "Tilted": response['tilde']['name'], "Tilted Confidence": round(response['tilde']['confidence'], 4), "Rotated": response['rode']['name'], "Rotated Confidence": round(response['rode']['confidence'], 4)}), ignore_index=True)
-
+            dataframe = pd.concat([dataframe, pd.DataFrame({"file": [f'Page {i + 1}'], "Tilted": [response['tilde']['name']], "Tilted Confidence": [round(response['tilde']['confidence'], 4)], "Rotated": [response['rode']['name']], "Rotated Confidence": [round(response['rode']['confidence'], 4)]})], ignore_index=True)
             if response['tilde']['name'] == "tilted":
                 st.error(f':warning: La Página **{i + 1}** en el PDF está inclinada. Por favor, enderece la imagen.')
 
