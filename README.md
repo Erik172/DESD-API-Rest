@@ -73,7 +73,7 @@ pip install -r frontend/requirements.txt
 Para iniciar el servidor backend, ejecuta el siguiente comando:
 
 ```bash
-python backend/app.py
+python backend/main.py
 ```
 
 El servidor se iniciará en la dirección `http://localhost:5000/`.
