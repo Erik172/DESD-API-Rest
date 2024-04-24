@@ -53,7 +53,8 @@ def process_uploaded_images(uploaded_file, show_image, version="v1"):
                 prediction, confidence = st.columns(2)
                 prediction.metric("Prediction", response['data'][0]['name'])
                 confidence.metric("Confidence", round(response['data'][0]['confidence'], 4))
-                dataframe = dataframe.append({"file": file.name, "Prediction": response['data'][0]['name'], "Confidence": round(response['data'][0]['confidence'], 4)}, ignore_index=True)
+                # dataframe = dataframe.append({"file": file.name, "Prediction": response['data'][0]['name'], "Confidence": round(response['data'][0]['confidence'], 4)}, ignore_index=True)
+                dataframe = pd.concat(dataframe, pd.DataFrame({"file": file.name, "Prediction": response['data'][0]['name'], "Confidence": round(response['data'][0]['confidence'], 4)}), ignore_index=True)
 
                 if response['data'][0]['name'] == "rotated":
                     st.error(f':warning: La imagen "**{file.name}**" está rotada. Por favor, gire la imagen.')
@@ -111,7 +112,8 @@ def process_pdf_file(uploaded_file, show_image, version="v1"):
                 prediction, confidence = st.columns(2)
                 prediction.metric("Prediction", response['data'][0]['name'])
                 confidence.metric("Confidence", round(response['data'][0]['confidence'], 4))
-                dataframe = dataframe.append({"file": f'Page {i + 1}', "Prediction": response['data'][0]['name'], "Confidence": round(response['data'][0]['confidence'], 4)}, ignore_index=True)
+                # dataframe = dataframe.append({"file": f'Page {i + 1}', "Prediction": response['data'][0]['name'], "Confidence": round(response['data'][0]['confidence'], 4)}, ignore_index=True)
+                dataframe = pd.concat(dataframe, pd.DataFrame({"file": f'Page {i + 1}', "Prediction": response['data'][0]['name'], "Confidence": round(response['data'][0]['confidence'], 4)}), ignore_index=True)
 
                 if response['data'][0]['name'] == "rotated":
                     st.error(f':warning: La Página **{i + 1}** en el PDF está rotada. Por favor, gire la imagen.')
