@@ -1,17 +1,16 @@
-import re
+from dotenv import load_dotenv
 import base64
 from flask import request, jsonify
 from flask_restful import Resource
 from ultralytics import YOLO
-from dotenv import load_dotenv
 
 from src import parse_result_yolov8
 
 load_dotenv()
 
-class RoDeV1(Resource):
+class CuDeV1(Resource):
     def post(self):
-        model_path = 'models/rode_v1.pt'
+        model_path = 'models/cude_v1.pt'
         
         model = YOLO(model_path, verbose=True)
 

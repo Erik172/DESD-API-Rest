@@ -4,6 +4,8 @@ from ultralytics import YOLO
 import base64
 import re
 
+from src import parse_result_yolov8
+
 models = {
     "tilde_v1": "models/tilde_v1.pt",
     "rode_v1": "models/rode_v1.pt"
@@ -25,33 +27,12 @@ class Audit(Resource):
         rode_model = YOLO(models["rode_v1"])
 
         tilde_results = tilde_model("temp.png")
-        tilde_results = self.parse_result(tilde_results[0])
+        tilde_results = parse_result_yolov8(tilde_results[0])
 
         rode_results = rode_model("temp.png")
-        rode_results = self.parse_result(rode_results[0])
+        rode_results = parse_result_yolov8(rode_results[0])
 
         results["tilde"] = tilde_results['data'][0]
         results["rode"] = rode_results['data'][0]
 
         return jsonify(results)
-
-    def parse_result(self, result):
-        verbose = result.verbose()
-
-        verbose = verbose.split(',')
-        verbose = [v.strip() for v in verbose]
-        result_dict = {'data': []}
-        for i in verbose:
-            try:
-                r = re.split(r'(\d+\.\d+)', i)
-                class_name = r[0].strip()
-                confidence = float(r[1])
-
-                result_dict['data'].append({
-                    'name': class_name,
-                    'confidence': confidence
-                })
-            except:
-                pass
-
-        return result_dict
