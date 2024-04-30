@@ -1,5 +1,4 @@
 from pdf2image import convert_from_bytes
-import matplotlib.pyplot as plt
 import streamlit as st
 import pandas as pd
 import requests
@@ -17,50 +16,89 @@ st.set_page_config(
 st.title("Auditoría 🔍")
 st.markdown("Esta página es para auditar las imágenes y archivos PDF. Puede subir imágenes o archivos PDF para obtener las predicciones.")
     
-show_image = st.checkbox("Show uploaded image(s)", value=False)
-uploaded_file = st.file_uploader("Upload image(s)", type=["jpg", "jpeg", "png", "tif", "tiff"], accept_multiple_files=True)
-uploaded_pdf = st.file_uploader("Upload PDF file", type=["pdf"], accept_multiple_files=False)
+show_image = st.checkbox("Mostrar previzualización de la imagen", value=False)
+uploaded_file = st.file_uploader("Subir Imagenes", type=["jpg", "jpeg", "png", "tif", "tiff"], accept_multiple_files=True)
+uploaded_pdf = st.file_uploader("Subir Archivos PDF", type=["pdf"], accept_multiple_files=True)
 
-placeholder = st.empty()
-dataframe = pd.DataFrame(columns=["file", "Tilted", "Tilted Confidence", "Rotated", "Rotated Confidence"])
+st.caption("Resultados de imagenes con problemas")
+placeholder_bad = st.empty()
+st.divider()
+
+st.caption("Resultados de imagenes sin problemas")
+placeholder_good = st.empty()
+st.divider()
+
+st.caption("Todos los resultados")
+placeholder_all = st.empty()
+st.divider()
+
+dataframe = pd.DataFrame(columns=["archivo", "inclinado", "confianza inclinacion", "rotado", "confianza rotacion", "cortado", "confianza corte"])
+bad_dataframe = pd.DataFrame(columns=["archivo", "inclinado", "confianza inclinacion", "rotado", "confianza rotacion", "cortado", "confianza corte"])
+good_dataframe = pd.DataFrame(columns=["archivo", "inclinado", "confianza inclinacion", "rotado", "confianza rotacion", "cortado", "confianza corte"])
+
 with st.container():
-    placeholder.dataframe(dataframe)    
+    placeholder_all.dataframe(dataframe) 
+    placeholder_bad.dataframe(bad_dataframe)
+    placeholder_good.dataframe(good_dataframe)   
 
-@st.cache_data()
-def convert_df(dataframe):
-    return dataframe.to_csv(index=False).encode("utf-8")
+@st.cache_data
+def convert_df(df):
+    return df.to_csv().encode('utf-8')
 
 def process_uploaded_images(uploaded_file, show_image):
     global dataframe
-    with st.spinner("Processing..."):
+    global bad_dataframe
+    global good_dataframe
+    
+    with st.spinner("Procesando..."):
         for file in uploaded_file:
             image = file.read()
             response = requests.post(API_URL_BASE, files={"image": image})
             response = response.json()
 
+            # change names to spanish
+            response['tilde']['name'] = "inclinado" if response['tilde']['name'] == "tilted" else "no inclinado"
+            response['rode']['name'] = "rotado" if response['rode']['name'] == "rotated" else "no rotado"
+            response['cude']['name'] = "con corte informacion" if response['cude']['name'] == "cut" else "sin corte informacion"
+
             st.caption(file.name)  
 
             tilted, tilded_confidence = st.columns(2)
-            tilted.metric("Tilted", response['tilde']['name'])
-            tilded_confidence.metric("Confidence", round(response['tilde']['confidence'], 4))
+            tilted.metric("Inclinado", response['tilde']['name'])
+            tilded_confidence.metric("Confianza", f'{response['tilde']['confidence'] * 100} %')
 
             rotated, rotated_confidence = st.columns(2)
-            rotated.metric("Rotated", response['rode']['name'])
-            rotated_confidence.metric("Confidence", round(response['rode']['confidence'], 4))
+            rotated.metric("Rotado", response['rode']['name'])
+            rotated_confidence.metric("Confianza", f'{response['rode']['confidence'] * 100} %')
 
-            # dataframe = dataframe.append({"file": file.name, "Tilted": response['tilde']['name'], "Tilted Confidence": round(response['tilde']['confidence'], 4), "Rotated": response['rode']['name'], "Rotated Confidence": round(response['rode']['confidence'], 4)}, ignore_index=True)
-            dataframe = pd.concat([dataframe, pd.DataFrame({"file": [file.name], "Tilted": [response['tilde']['name']], "Tilted Confidence": [round(response['tilde']['confidence'], 4)], "Rotated": [response['rode']['name']], "Rotated Confidence": [round(response['rode']['confidence'], 4)]})], ignore_index=True)
-            if response['tilde']['name'] == "tilted":
-                st.error(f':warning: La imagen "**{file.name}**" está inclinada. Por favor, enderece la imagen.')
+            cut, cut_confidence = st.columns(2)
+            cut.metric("Cortado", response['cude']['name'])
+            cut_confidence.metric("Confianza", f'{response['cude']['confidence'] * 100} %')
 
-            if response['rode']['name'] == "rotated":
-                st.error(f':warning: La imagen "**{file.name}**" está rotada. Por favor, gire la imagen.')
+            dataframe = pd.concat([dataframe, pd.DataFrame({"archivo": [file.name], "inclinado": [response['tilde']['name']], "confianza inclinacion": [response['tilde']['confidence'] * 100], "rotado": [response['rode']['name']], "confianza rotacion": [response['rode']['confidence'] * 100], "cortado": [response['cude']['name']], "confianza corte": [response['cude']['confidence'] * 100]})], ignore_index=True)
+
+            if response['tilde']['name'] == "inclinado":
+                st.error(f':warning: La imagen "**{file.name}**" está inclinada.')
+
+            if response['rode']['name'] == "rotado":
+                st.error(f':warning: La imagen "**{file.name}**" está rotada.')
+
+            if response['cude']['name'] == "con corte informacion":
+                st.error(f':warning: La imagen "**{file.name}**" tiene cortes de información.')
+
+            if response['tilde']['name'] == "inclinado" or response['rode']['name'] == "rotado" or response['cude']['name'] == "con corte informacion":
+                bad_dataframe = pd.concat([bad_dataframe, pd.DataFrame({"archivo": [file.name], "inclinado": [response['tilde']['name']], "confianza inclinacion": [response['tilde']['confidence'] * 100], "rotado": [response['rode']['name']], "confianza rotacion": [response['rode']['confidence'] * 100], "cortado": [response['cude']['name']], "confianza corte": [response['cude']['confidence'] * 100]})], ignore_index=True)
+            else:
+                good_dataframe = pd.concat([good_dataframe, pd.DataFrame({"archivo": [file.name], "inclinado": [response['tilde']['name']], "confianza inclinacion": [response['tilde']['confidence'] * 100], "rotado": [response['rode']['name']], "confianza rotacion": [response['rode']['confidence'] * 100], "cortado": [response['cude']['name']], "confianza corte": [response['cude']['confidence'] * 100]})], ignore_index=True)
 
 
             if show_image:
                 st.image(image, use_column_width=True, caption="Uploaded Image")
+
             st.divider()
-            placeholder.dataframe(dataframe)
+            placeholder_all.dataframe(dataframe)
+            placeholder_bad.dataframe(bad_dataframe)
+            placeholder_good.dataframe(good_dataframe)
 
         if dataframe.shape[0] > 0:
             with st.container():
@@ -69,7 +107,7 @@ def process_uploaded_images(uploaded_file, show_image):
                 csv = convert_df(dataframe)
 
                 st.download_button(
-                    label="Download data as CSV",
+                    label="Descargar data as CSV",
                     data=csv,
                     file_name=f'{file.name}_results.csv', # 'tilde_results.csv'
                     mime='text/csv',
@@ -77,60 +115,105 @@ def process_uploaded_images(uploaded_file, show_image):
 
 def process_pdf_file(uploaded_file, show_image):
     global dataframe
-    with st.spinner("Processing..."):
-        images = convert_from_bytes(uploaded_file.read())
-        for i, image in enumerate(images):
-            image.save(f"temp/temp_{i}.jpg")
-            image_path = f"temp/temp_{i}.jpg"
-            image = open(f"temp/temp_{i}.jpg", "rb")
+    global bad_dataframe
+    global good_dataframe
 
-            response = requests.post(API_URL_BASE, files={"image": image})
-            response = response.json()
+    with st.spinner("Procesando..."):
+        for pdf in uploaded_file:
+            images = convert_from_bytes(pdf.read())
+            for i, image in enumerate(images):
+                image.save(f"temp/temp_{i}.jpg")
+                image_path = f"temp/temp_{i}.jpg"
+                image = open(f"temp/temp_{i}.jpg", "rb")
 
-            st.caption(f"Page {i + 1}")
+                response = requests.post(API_URL_BASE, files={"image": image})
+                response = response.json()
 
-            tilted, tilded_confidence = st.columns(2)
-            tilted.metric("Tilted", response['tilde']['name'])
-            tilded_confidence.metric("Confidence", round(response['tilde']['confidence'], 4))
+                # change names to spanish
+                response['tilde']['name'] = "inclinado" if response['tilde']['name'] == "tilted" else "no inclinado"
+                response['rode']['name'] = "rotado" if response['rode']['name'] == "rotated" else "no rotado"
+                response['cude']['name'] = "con corte informacion" if response['cude']['name'] == "cut" else "sin corte informacion"
 
-            rotated, rotated_confidence = st.columns(2)
-            rotated.metric("Rotated", response['rode']['name'])
-            rotated_confidence.metric("Confidence", round(response['rode']['confidence'], 4))
+                st.caption(f"Pagina {i + 1} del PDF {pdf.name}")
 
-            # dataframe = dataframe.append({"file": f'Page {i + 1}', "Tilted": response['tilde']['name'], "Tilted Confidence": round(response['tilde']['confidence'], 4), "Rotated": response['rode']['name'], "Rotated Confidence": round(response['rode']['confidence'], 4)}, ignore_index=True)
-            dataframe = pd.concat([dataframe, pd.DataFrame({"file": [f'Page {i + 1}'], "Tilted": [response['tilde']['name']], "Tilted Confidence": [round(response['tilde']['confidence'], 4)], "Rotated": [response['rode']['name']], "Rotated Confidence": [round(response['rode']['confidence'], 4)]})], ignore_index=True)
-            if response['tilde']['name'] == "tilted":
-                st.error(f':warning: La Página **{i + 1}** en el PDF está inclinada. Por favor, enderece la imagen.')
+                tilted, tilded_confidence = st.columns(2)
+                tilted.metric("Inclinado", response['tilde']['name'])
+                tilded_confidence.metric("Confianza", round(response['tilde']['confidence'], 4))
 
-            if response['rode']['name'] == "rotated":
-                st.error(f':warning: La Página **{i + 1}** en el PDF está rotada. Por favor, gire la imagen.')
+                rotated, rotated_confidence = st.columns(2)
+                rotated.metric("Rotado", response['rode']['name'])
+                rotated_confidence.metric("Confianza", round(response['rode']['confidence'], 4))
 
+                dataframe = pd.concat([dataframe, pd.DataFrame({
+                    "archivo": [pdf.name],
+                    "pagina": [f'Pagina {i + 1}'],
+                    "inclinado": [response['tilde']['name']],
+                    "confianza inclinacion": [response['tilde']['confidence'] * 100],
+                    "rotado": [response['rode']['name']],
+                    "confianza rotacion": [response['rode']['confidence'] * 100],
+                    "cortado": [response['cude']['name']],
+                    "confianza corte": [response['cude']['confidence'] * 100]
+                })], ignore_index=True)
 
-            if show_image:
-                st.image(image_path, use_column_width=True, caption="Uploaded Image", output_format="JPEG")
-            
-            try:
-                os.remove(f"temp/temp_{i}.jpg")
-            except PermissionError:
-                print("PermissionError: Unable to delete the temporary file.")
+                if response['tilde']['name'] == "inclinado":
+                    st.error(f':warning: La Página **{i + 1}** en el PDF "**{pdf.name}**" está inclinada.')
 
-            st.divider()
-            placeholder.dataframe(dataframe)
+                if response['rode']['name'] == "rotado":
+                    st.error(f':warning: La Página **{i + 1}** en el PDF "**{pdf.name}**" está rotada.')
 
-        if dataframe.shape[0] > 0:
-            
-            with st.container():
-                st.dataframe(dataframe)
+                if response['cude']['name'] == "con corte informacion":
+                    st.error(f':warning: La Página **{i + 1}** en el PDF "**{pdf.name}**" tiene cortes de información.')
 
-                csv = convert_df(dataframe)
+                if response['tilde']['name'] == "inclinado" or response['rode']['name'] == "rotado" or response['cude']['name'] == "con corte informacion":
+                    bad_dataframe = pd.concat([bad_dataframe, pd.DataFrame({
+                        "archivo": [pdf.name],
+                        "pagina": [f'Pagina {i + 1}'],
+                        "inclinado": [response['tilde']['name']],
+                        "confianza inclinacion": [round(response['tilde']['confidence'], 4)],
+                        "rotado": [response['rode']['name']],
+                        "confianza rotacion": [round(response['rode']['confidence'], 4)],
+                        "cortado": [response['cude']['name']],
+                        "confianza corte": [round(response['cude']['confidence'], 4)]
+                    })], ignore_index=True
+                    )
+                else:
+                    good_dataframe = pd.concat([good_dataframe, pd.DataFrame({
+                        "archivo": [pdf.name],
+                        "pagina": [f'Pagina {i + 1}'],
+                        "inclinado": [response['tilde']['name']],
+                        "confianza inclinacion": [round(response['tilde']['confidence'], 4)],
+                        "rotado": [response['rode']['name']],
+                        "confianza rotacion": [round(response['rode']['confidence'], 4)],
+                        "cortado": [response['cude']['name']],
+                        "confianza corte": [round(response['cude']['confidence'], 4)]
+                    })], ignore_index=True
+                    )
 
-                st.download_button(
-                    label="Download data as CSV",
-                    data=csv,
-                    file_name=f'{uploaded_file.name}_results.csv', # 'tilde_results.csv'
-                    mime='text/csv',
-                )
+                if show_image:
+                    st.image(image_path, use_column_width=True, caption="Uploaded Image", output_format="JPEG")
 
+                try:
+                    os.remove(f"temp/temp_{i}.jpg")
+                except PermissionError:
+                    print("PermissionError: Unable to delete the temporary file.")
+
+                st.divider()
+                placeholder_all.dataframe(dataframe)
+                placeholder_bad.dataframe(bad_dataframe)
+                placeholder_good.dataframe(good_dataframe)
+
+            if dataframe.shape[0] > 0:
+                with st.container():
+                    st.dataframe(dataframe)
+
+                    csv = convert_df(dataframe)
+
+                    st.download_button(
+                        label="Descargar data as CSV",
+                        data=csv,
+                        file_name=f'{pdf.name}_results.csv', # 'tilde_results.csv'
+                        mime='text/csv',
+                    )
 
 def main():
     if uploaded_file:

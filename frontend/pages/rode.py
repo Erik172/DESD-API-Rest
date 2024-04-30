@@ -9,29 +9,32 @@ API_URL_BASE = "http://localhost:5000/rode"
 
 st.set_page_config(
     page_title="RoDe (Rotation Detection)",
-    page_icon="🤖",
+    page_icon="🔄",
     layout="centered",
     initial_sidebar_state="auto"
 )
 
-st.title("RoDe (Rotation Detection) 🔄")
-st.markdown("This page is for detecting the rotation of images. You can upload images or PDF files to get the predictions.")
+st.title("RoDe (Rotation Detection) Detección de rotación 🔄")
+st.markdown("Esta página es para detectar la rotación en las imágenes y archivos PDF. Puede subir imágenes o archivos PDF para obtener las predicciones.")
 
-version = st.selectbox(
-    "Select the version of the model to use",
-    ("v1", "v2")
-)
+# version = st.selectbox(
+#     "Select the version of the model to use",
+#     ("v1", "v2")
+# )
+
+version = "v1"
     
 show_image = st.checkbox("Show uploaded image(s)", value=False)
 uploaded_file = st.file_uploader("Upload image(s)", type=["jpg", "jpeg", "png", "tif", "tiff"], accept_multiple_files=True)
 uploaded_pdf = st.file_uploader("Upload PDF file", type=["pdf"], accept_multiple_files=False)
 
 placeholder = st.empty()
-dataframe = pd.DataFrame(columns=["file", "Prediction", "Confidence", "Time"])
+dataframe = pd.DataFrame(columns=["archivo", "predicción", "confianza"])
+
 with st.container():
     placeholder.dataframe(dataframe)    
 
-@st.cache_data()
+@st.cache_data
 def convert_df(dataframe):
     return dataframe.to_csv(index=False).encode("utf-8")
 
@@ -44,6 +47,10 @@ def process_uploaded_images(uploaded_file, show_image, version="v1"):
             response = requests.post(API_URL, files={"image": image})
             response = response.json()
 
+            # cambiar nombres a español
+            response['data'][0]['name'] = "rotado" if response['data'][0]['name'] == "rotated" else "no rotado"
+            response['data'][1]['name'] = "rotado" if response['data'][1]['name'] == "rotated" else "no rotado"
+
             st.caption(file.name)   
 
             if version == "v1":
@@ -53,10 +60,11 @@ def process_uploaded_images(uploaded_file, show_image, version="v1"):
                 prediction, confidence = st.columns(2)
                 prediction.metric("Prediction", response['data'][0]['name'])
                 confidence.metric("Confidence", round(response['data'][0]['confidence'], 4))
-                # dataframe = dataframe.append({"file": file.name, "Prediction": response['data'][0]['name'], "Confidence": round(response['data'][0]['confidence'], 4)}, ignore_index=True)
-                dataframe = pd.concat([dataframe, pd.DataFrame({"file": [file.name], "Prediction": [response['data'][0]['name']], "Confidence": [round(response['data'][0]['confidence'], 4)]})], ignore_index=True)
-                if response['data'][0]['name'] == "rotated":
-                    st.error(f':warning: La imagen "**{file.name}**" está rotada. Por favor, gire la imagen.')
+
+                dataframe = pd.concat([dataframe, pd.DataFrame({"archivo": [file.name], "predicción": [response['data'][0]['name']], "confianza": [response['data'][0]['confidence'] * 100]})], ignore_index=True)
+
+                if response['data'][0]['name'] == "rotado":
+                    st.error(f':warning: La imagen "**{file.name}**" está rotada.')
 
             if version == "v2":
                 pass
@@ -78,17 +86,6 @@ def process_uploaded_images(uploaded_file, show_image, version="v1"):
                     file_name=f'{file.name}_results.csv', # 'tilde_results.csv'
                     mime='text/csv',
                 )
-
-                # st.line_chart(dataframe["Confidence"], use_container_width=True, height=300, x=dataframe["file"].tolist())
-                plt.rcParams["figure.figsize"] = (12, 5)
-                fig, ax = plt.subplots()
-                ax.bar(dataframe["file"], dataframe["Confidence"])
-                ax.set_xlabel("File")
-                ax.set_ylabel("Confidence")
-                ax.set_title("Confidence of Predictions")
-                ax.set_xticklabels(dataframe["file"], rotation=45)
-                # ax.grid(True)
-                st.pyplot(fig)
 
 def process_pdf_file(uploaded_file, show_image, version="v1"):
     global dataframe
@@ -144,17 +141,6 @@ def process_pdf_file(uploaded_file, show_image, version="v1"):
                     file_name=f'{uploaded_file.name}_results.csv', # 'tilde_results.csv'
                     mime='text/csv',
                 )
-
-                # st.line_chart(dataframe["Confidence"], use_container_width=True, height=300, x=dataframe["file"].tolist())
-                plt.rcParams["figure.figsize"] = (12, 5)
-                fig, ax = plt.subplots()
-                ax.bar(dataframe["file"], dataframe["Confidence"])
-                ax.set_xlabel("File")
-                ax.set_ylabel("Confidence")
-                ax.set_title("Confidence of Predictions")
-                ax.set_xticklabels(dataframe["file"], rotation=45)
-                # ax.grid(True)
-                st.pyplot(fig)
 
 def main():
     if uploaded_file:
