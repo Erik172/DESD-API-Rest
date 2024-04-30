@@ -138,11 +138,15 @@ def process_pdf_file(uploaded_file, show_image):
 
                 tilted, tilded_confidence = st.columns(2)
                 tilted.metric("Inclinado", response['tilde']['name'])
-                tilded_confidence.metric("Confianza", round(response['tilde']['confidence'], 4))
+                tilded_confidence.metric("Confianza", f'{response['tilde']['confidence'] * 100} %')
 
                 rotated, rotated_confidence = st.columns(2)
                 rotated.metric("Rotado", response['rode']['name'])
-                rotated_confidence.metric("Confianza", round(response['rode']['confidence'], 4))
+                rotated_confidence.metric("Confianza", f'{response['rode']['confidence'] * 100} %')
+
+                cut, cut_confidence = st.columns(2)
+                cut.metric("Cortado", response['cude']['name'])
+                cut_confidence.metric("Confianza", f'{response['cude']['confidence'] * 100} %')
 
                 dataframe = pd.concat([dataframe, pd.DataFrame({
                     "archivo": [pdf.name],
@@ -202,18 +206,18 @@ def process_pdf_file(uploaded_file, show_image):
                 placeholder_bad.dataframe(bad_dataframe)
                 placeholder_good.dataframe(good_dataframe)
 
-            if dataframe.shape[0] > 0:
-                with st.container():
-                    st.dataframe(dataframe)
+        if dataframe.shape[0] > 0:
+            with st.container():
+                st.dataframe(dataframe)
 
-                    csv = convert_df(dataframe)
+                csv = convert_df(dataframe)
 
-                    st.download_button(
-                        label="Descargar data as CSV",
-                        data=csv,
-                        file_name=f'{pdf.name}_results.csv', # 'tilde_results.csv'
-                        mime='text/csv',
-                    )
+                st.download_button(
+                    label="Descargar data as CSV",
+                    data=csv,
+                    file_name=f'{pdf.name}_results.csv', # 'tilde_results.csv'
+                    mime='text/csv',
+                )
 
 def main():
     if uploaded_file:
