@@ -75,7 +75,17 @@ def process_uploaded_images(uploaded_file, show_image):
             cut.metric("Cortado", response['cude']['name'])
             cut_confidence.metric("Confianza", f'{response['cude']['confidence'] * 100} %')
 
-            dataframe = pd.concat([dataframe, pd.DataFrame({"archivo": [file.name], "inclinado": [response['tilde']['name']], "confianza inclinacion": [response['tilde']['confidence'] * 100], "rotado": [response['rode']['name']], "confianza rotacion": [response['rode']['confidence'] * 100], "cortado": [response['cude']['name']], "confianza corte": [response['cude']['confidence'] * 100]})], ignore_index=True)
+            data = {
+                "archivo": [file.name],
+                "inclinado": [response['tilde']['name']],
+                "confianza inclinacion": [response['tilde']['confidence'] * 100],
+                "rotado": [response['rode']['name']],
+                "confianza rotacion": [response['rode']['confidence'] * 100],
+                "cortado": [response['cude']['name']],
+                "confianza corte": [response['cude']['confidence'] * 100]
+            }
+
+            dataframe = pd.concat([dataframe, pd.DataFrame(data)], ignore_index=True)
 
             if response['tilde']['name'] == "inclinado":
                 st.error(f':warning: La imagen "**{file.name}**" está inclinada.')
@@ -87,9 +97,9 @@ def process_uploaded_images(uploaded_file, show_image):
                 st.error(f':warning: La imagen "**{file.name}**" tiene cortes de información.')
 
             if response['tilde']['name'] == "inclinado" or response['rode']['name'] == "rotado" or response['cude']['name'] == "con corte informacion":
-                bad_dataframe = pd.concat([bad_dataframe, pd.DataFrame({"archivo": [file.name], "inclinado": [response['tilde']['name']], "confianza inclinacion": [response['tilde']['confidence'] * 100], "rotado": [response['rode']['name']], "confianza rotacion": [response['rode']['confidence'] * 100], "cortado": [response['cude']['name']], "confianza corte": [response['cude']['confidence'] * 100]})], ignore_index=True)
+                bad_dataframe = pd.concat([bad_dataframe, pd.DataFrame(data)], ignore_index=True)
             else:
-                good_dataframe = pd.concat([good_dataframe, pd.DataFrame({"archivo": [file.name], "inclinado": [response['tilde']['name']], "confianza inclinacion": [response['tilde']['confidence'] * 100], "rotado": [response['rode']['name']], "confianza rotacion": [response['rode']['confidence'] * 100], "cortado": [response['cude']['name']], "confianza corte": [response['cude']['confidence'] * 100]})], ignore_index=True)
+                good_dataframe = pd.concat([good_dataframe, pd.DataFrame(data)], ignore_index=True)
 
 
             if show_image:
@@ -148,7 +158,7 @@ def process_pdf_file(uploaded_file, show_image):
                 cut.metric("Cortado", response['cude']['name'])
                 cut_confidence.metric("Confianza", f'{response['cude']['confidence'] * 100} %')
 
-                dataframe = pd.concat([dataframe, pd.DataFrame({
+                data = {
                     "archivo": [pdf.name],
                     "pagina": [f'Pagina {i + 1}'],
                     "inclinado": [response['tilde']['name']],
@@ -157,7 +167,9 @@ def process_pdf_file(uploaded_file, show_image):
                     "confianza rotacion": [response['rode']['confidence'] * 100],
                     "cortado": [response['cude']['name']],
                     "confianza corte": [response['cude']['confidence'] * 100]
-                })], ignore_index=True)
+                }
+
+                dataframe = pd.concat([dataframe, pd.DataFrame(data)], ignore_index=True)
 
                 if response['tilde']['name'] == "inclinado":
                     st.error(f':warning: La Página **{i + 1}** en el PDF "**{pdf.name}**" está inclinada.')
@@ -169,29 +181,9 @@ def process_pdf_file(uploaded_file, show_image):
                     st.error(f':warning: La Página **{i + 1}** en el PDF "**{pdf.name}**" tiene cortes de información.')
 
                 if response['tilde']['name'] == "inclinado" or response['rode']['name'] == "rotado" or response['cude']['name'] == "con corte informacion":
-                    bad_dataframe = pd.concat([bad_dataframe, pd.DataFrame({
-                        "archivo": [pdf.name],
-                        "pagina": [f'Pagina {i + 1}'],
-                        "inclinado": [response['tilde']['name']],
-                        "confianza inclinacion": [round(response['tilde']['confidence'], 4)],
-                        "rotado": [response['rode']['name']],
-                        "confianza rotacion": [round(response['rode']['confidence'], 4)],
-                        "cortado": [response['cude']['name']],
-                        "confianza corte": [round(response['cude']['confidence'], 4)]
-                    })], ignore_index=True
-                    )
+                    bad_dataframe = pd.concat([bad_dataframe, pd.DataFrame(data)], ignore_index=True)
                 else:
-                    good_dataframe = pd.concat([good_dataframe, pd.DataFrame({
-                        "archivo": [pdf.name],
-                        "pagina": [f'Pagina {i + 1}'],
-                        "inclinado": [response['tilde']['name']],
-                        "confianza inclinacion": [round(response['tilde']['confidence'], 4)],
-                        "rotado": [response['rode']['name']],
-                        "confianza rotacion": [round(response['rode']['confidence'], 4)],
-                        "cortado": [response['cude']['name']],
-                        "confianza corte": [round(response['cude']['confidence'], 4)]
-                    })], ignore_index=True
-                    )
+                    good_dataframe = pd.concat([good_dataframe, pd.DataFrame(data)], ignore_index=True)
 
                 if show_image:
                     st.image(image_path, use_column_width=True, caption="Uploaded Image", output_format="JPEG")
