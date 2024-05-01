@@ -36,12 +36,9 @@ bad_placeholder = st.empty()
 
 
 dataframe = pd.DataFrame(columns=["archivo", "predicción", "confianza"])
-
-
 bad_dataframe = pd.DataFrame(columns=["archivo", "predicción", "confianza"])
 
 with st.container():
-    
     bad_placeholder.dataframe(bad_dataframe)
     placeholder.dataframe(dataframe)    
 
@@ -51,6 +48,7 @@ def convert_df(dataframe):
 
 def process_uploaded_images(uploaded_file, show_image, version="v1"):
     global bad_placeholder
+    global bad_dataframe
     global dataframe
     with st.spinner("Processing..."):
         for file in uploaded_file:
@@ -105,6 +103,7 @@ def process_uploaded_images(uploaded_file, show_image, version="v1"):
 
 def process_pdf_file(uploaded_file, show_image, version="v1"):
     global bad_placeholder
+    global bad_dataframe
     global dataframe
     with st.spinner("Processing..."):
         for pdf in uploaded_pdf:
