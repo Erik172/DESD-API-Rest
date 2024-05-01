@@ -28,13 +28,16 @@ show_image = st.checkbox("Show uploaded image(s)", value=False)
 uploaded_file = st.file_uploader("Upload image(s)", type=["jpg", "jpeg", "png", "tif", "tiff"], accept_multiple_files=True)
 uploaded_pdf = st.file_uploader("Upload PDF file", type=["pdf"], accept_multiple_files=True)
 
-placeholder = st.empty()
-bad_placeholder = st.empty()
-
 st.caption("Resultados de imagenes con problemas")
-dataframe = pd.DataFrame(columns=["archivo", "predicción", "confianza"])
+placeholder = st.empty()
 
 st.caption("Todos los resultados")
+bad_placeholder = st.empty()
+
+
+dataframe = pd.DataFrame(columns=["archivo", "predicción", "confianza"])
+
+
 bad_dataframe = pd.DataFrame(columns=["archivo", "predicción", "confianza"])
 
 with st.container():
@@ -47,6 +50,7 @@ def convert_df(dataframe):
     return dataframe.to_csv(index=False).encode("utf-8")
 
 def process_uploaded_images(uploaded_file, show_image, version="v1"):
+    global bad_placeholder
     global dataframe
     with st.spinner("Processing..."):
         for file in uploaded_file:
@@ -100,6 +104,7 @@ def process_uploaded_images(uploaded_file, show_image, version="v1"):
                 )
 
 def process_pdf_file(uploaded_file, show_image, version="v1"):
+    global bad_placeholder
     global dataframe
     with st.spinner("Processing..."):
         for pdf in uploaded_pdf:
