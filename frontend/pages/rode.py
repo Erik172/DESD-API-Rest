@@ -29,9 +29,13 @@ uploaded_file = st.file_uploader("Upload image(s)", type=["jpg", "jpeg", "png", 
 uploaded_pdf = st.file_uploader("Upload PDF file", type=["pdf"], accept_multiple_files=True)
 
 placeholder = st.empty()
+bad_placeholder = st.empty()
+
 dataframe = pd.DataFrame(columns=["archivo", "predicción", "confianza"])
+bad_dataframe = pd.DataFrame(columns=["archivo", "predicción", "confianza"])
 
 with st.container():
+    bad_placeholder.dataframe(bad_dataframe)
     placeholder.dataframe(dataframe)    
 
 @st.cache_data
@@ -72,9 +76,6 @@ def process_uploaded_images(uploaded_file, show_image, version="v1"):
                 if response['data'][0]['name'] == "rotado":
                     st.error(f':warning: La imagen "**{file.name}**" está rotada.')
 
-            if version == "v2":
-                pass
-
             if show_image:
                 st.image(image, use_column_width=True, caption="Uploaded Image")
             st.divider()
@@ -106,7 +107,10 @@ def process_pdf_file(uploaded_file, show_image, version="v1"):
                 response = requests.post(API_URL, files={"image": image})
                 response = response.json()
 
-                st.caption(f"Page {i + 1}")
+                #change names to spanish
+                response['data'][0]['name'] = "rotado" if response['data'][0]['name'] == "rotated" else "no rotado"
+
+                st.caption(f"Page {i + 1} del PDF {pdf.name}")
 
                 data = {
                     "archivo": [pdf.name],
@@ -123,8 +127,10 @@ def process_pdf_file(uploaded_file, show_image, version="v1"):
                     prediction.metric("Prediction", response['data'][0]['name'])
                     confidence.metric("Confidence", round(response['data'][0]['confidence'], 4))
                     dataframe = pd.concat([dataframe, pd.DataFrame(data)], ignore_index=True)
-                    if response['data'][0]['name'] == "rotated":
-                        st.error(f':warning: La Página **{i + 1}** en el PDF está rotada. Por favor, gire la imagen.')
+
+                    if response['data'][0]['name'] == "rotado":
+                        bad_dataframe = pd.concat([bad_dataframe, pd.DataFrame(data)], ignore_index=True)
+                        st.error(f':warning: La Página **{i + 1}** en el PDF está rotada.')
 
 
                 if version == "v2":
@@ -139,6 +145,8 @@ def process_pdf_file(uploaded_file, show_image, version="v1"):
                     print("PermissionError: Unable to delete the temporary file.")
 
                 st.divider()
+                
+                bad_placeholder.dataframe(bad_dataframe)
                 placeholder.dataframe(dataframe)
 
         if dataframe.shape[0] > 0:
