@@ -35,7 +35,10 @@ dataframe = pd.DataFrame(columns=["archivo", "predicción", "confianza"])
 bad_dataframe = pd.DataFrame(columns=["archivo", "predicción", "confianza"])
 
 with st.container():
+    st.caption("Resultados de imagenes con problemas")
     bad_placeholder.dataframe(bad_dataframe)
+
+    st.caption("Todos los resultados")
     placeholder.dataframe(dataframe)    
 
 @st.cache_data
@@ -145,7 +148,7 @@ def process_pdf_file(uploaded_file, show_image, version="v1"):
                     print("PermissionError: Unable to delete the temporary file.")
 
                 st.divider()
-                
+
                 bad_placeholder.dataframe(bad_dataframe)
                 placeholder.dataframe(dataframe)
 
