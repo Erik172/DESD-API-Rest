@@ -77,6 +77,7 @@ def process_uploaded_images(uploaded_file, show_image, version="v1"):
                 dataframe = pd.concat([dataframe, pd.DataFrame(data)], ignore_index=True)
 
                 if response['data'][0]['name'] == "rotado":
+                    bad_dataframe = pd.concat([bad_dataframe, pd.DataFrame(data)], ignore_index=True)
                     st.error(f':warning: La imagen "**{file.name}**" está rotada.')
 
             if show_image:
