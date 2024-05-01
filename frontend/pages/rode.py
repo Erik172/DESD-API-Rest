@@ -28,12 +28,11 @@ show_image = st.checkbox("Show uploaded image(s)", value=False)
 uploaded_file = st.file_uploader("Upload image(s)", type=["jpg", "jpeg", "png", "tif", "tiff"], accept_multiple_files=True)
 uploaded_pdf = st.file_uploader("Upload PDF file", type=["pdf"], accept_multiple_files=True)
 
-st.caption("Resultados de imagenes con problemas")
+st.caption("Todos los resultados")
 placeholder = st.empty()
 
-st.caption("Todos los resultados")
+st.caption("Resultados de imagenes con problemas")
 bad_placeholder = st.empty()
-
 
 dataframe = pd.DataFrame(columns=["archivo", "predicción", "confianza"])
 bad_dataframe = pd.DataFrame(columns=["archivo", "predicción", "confianza"])
