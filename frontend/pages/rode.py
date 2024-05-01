@@ -21,15 +21,15 @@ st.markdown("Esta página es para detectar la rotación en las imágenes y archi
 
 version = "v1"
     
-show_image = st.checkbox("Show uploaded image(s)", value=False)
+show_image = st.checkbox("Mostrar imagenes", value=False)
 uploaded_file = st.file_uploader("Upload image(s)", type=["jpg", "jpeg", "png", "tif", "tiff"], accept_multiple_files=True)
 uploaded_pdf = st.file_uploader("Upload PDF file", type=["pdf"], accept_multiple_files=True)
 
-st.caption("Todos los resultados")
-placeholder = st.empty()
-
 st.caption("Resultados de imagenes con problemas")
 bad_placeholder = st.empty()
+
+st.caption("Todos los resultados")
+placeholder = st.empty()
 
 dataframe = pd.DataFrame(columns=["archivo", "predicción", "confianza"])
 bad_dataframe = pd.DataFrame(columns=["archivo", "predicción", "confianza"])
@@ -59,7 +59,7 @@ def process_uploaded_images(uploaded_file, show_image, version="v1"):
             response['data'][1]['name'] = "rotado" if response['data'][1]['name'] == "rotated" else "no rotado"
 
             data = {
-                    "archivo": [image.name],
+                    "archivo": [file.name],
                     "predicción": [response['data'][0]['name']],
                     "confianza": [response['data'][0]['confidence'] * 100]
             }
@@ -84,6 +84,7 @@ def process_uploaded_images(uploaded_file, show_image, version="v1"):
                 st.image(image, use_column_width=True, caption="Uploaded Image")
             st.divider()
             placeholder.dataframe(dataframe)
+            bad_placeholder.dataframe(bad_dataframe)
 
         if dataframe.shape[0] > 0:
             with st.container():
@@ -109,16 +110,12 @@ def process_pdf_file(uploaded_pdf, show_image, version="v1"):
                 response = requests.post(API_URL, files={"image": image})
 
                 logging.info(response.status_code)
-
                 if response.status_code != 200:
                     st.error(f":warning: Error al procesar la página {i + 1} del PDF {pdf.name}.")
                     dataframe = pd.concat([dataframe, pd.DataFrame({"archivo": [pdf.name], "pagina": [f'Page {i + 1}'], "predicción": ["Error al procesar"], "confianza": [0]})], ignore_index=True)
-                    
                     continue
-                
-                response = response.json()
 
-                
+                response = response.json()
                 #change names to spanish
                 response['data'][0]['name'] = "rotado" if response['data'][0]['name'] == "rotated" else "no rotado"
 
@@ -144,7 +141,6 @@ def process_pdf_file(uploaded_pdf, show_image, version="v1"):
                         bad_dataframe = pd.concat([bad_dataframe, pd.DataFrame(data)], ignore_index=True)
                         st.error(f':warning: La Página **{i + 1}** en el PDF está rotada.')
 
-
                 if version == "v2":
                     pass
 
@@ -154,7 +150,9 @@ def process_pdf_file(uploaded_pdf, show_image, version="v1"):
                 try:
                     os.remove(f"temp/temp_{i}.jpg")
                 except PermissionError:
-                    print("PermissionError: Unable to delete the temporary file.")
+                    logging.error(f"Error al eliminar el archivo {i}.")
+                    os.system(f"rm temp/temp_{i}.jpg")
+                    pass
 
                 st.divider()
 
