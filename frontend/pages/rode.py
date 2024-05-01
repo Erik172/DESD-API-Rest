@@ -51,6 +51,12 @@ def process_uploaded_images(uploaded_file, show_image, version="v1"):
             response['data'][0]['name'] = "rotado" if response['data'][0]['name'] == "rotated" else "no rotado"
             response['data'][1]['name'] = "rotado" if response['data'][1]['name'] == "rotated" else "no rotado"
 
+            data = {
+                    "archivo": [image.name],
+                    "predicción": [response['data'][0]['name']],
+                    "confianza": [response['data'][0]['confidence'] * 100]
+            }
+
             st.caption(file.name)   
 
             if version == "v1":
@@ -61,7 +67,7 @@ def process_uploaded_images(uploaded_file, show_image, version="v1"):
                 prediction.metric("Prediction", response['data'][0]['name'])
                 confidence.metric("Confidence", round(response['data'][0]['confidence'], 4))
 
-                dataframe = pd.concat([dataframe, pd.DataFrame({"archivo": [file.name], "predicción": [response['data'][0]['name']], "confianza": [response['data'][0]['confidence'] * 100]})], ignore_index=True)
+                dataframe = pd.concat([dataframe, pd.DataFrame(data)], ignore_index=True)
 
                 if response['data'][0]['name'] == "rotado":
                     st.error(f':warning: La imagen "**{file.name}**" está rotada.')
@@ -105,8 +111,8 @@ def process_pdf_file(uploaded_file, show_image, version="v1"):
                 data = {
                     "archivo": [pdf.name],
                     "pagina": [f'Page {i + 1}'], # "Page 1
-                    "Prediction": [response['data'][0]['name']],
-                    "Confidence": [response['data'][0]['confidence'] * 100]
+                    "prediction": [response['data'][0]['name']],
+                    "confidence": [response['data'][0]['confidence'] * 100]
                 }
 
                 if version == "v1":
@@ -116,8 +122,6 @@ def process_pdf_file(uploaded_file, show_image, version="v1"):
                     prediction, confidence = st.columns(2)
                     prediction.metric("Prediction", response['data'][0]['name'])
                     confidence.metric("Confidence", round(response['data'][0]['confidence'], 4))
-                    # dataframe = dataframe.append({"file": f'Page {i + 1}', "Prediction": response['data'][0]['name'], "Confidence": round(response['data'][0]['confidence'], 4)}, ignore_index=True)
-                    # dataframe = pd.concat([dataframe, pd.DataFrame({"archivo": [f'Page {i + 1}'], "predicción": [response['data'][0]['name']], "confianza": [round(response['data'][0]['confidence'], 4)]})], ignore_index=True)
                     dataframe = pd.concat([dataframe, pd.DataFrame(data)], ignore_index=True)
                     if response['data'][0]['name'] == "rotated":
                         st.error(f':warning: La Página **{i + 1}** en el PDF está rotada. Por favor, gire la imagen.')
