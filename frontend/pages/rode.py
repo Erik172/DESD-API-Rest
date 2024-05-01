@@ -31,14 +31,15 @@ uploaded_pdf = st.file_uploader("Upload PDF file", type=["pdf"], accept_multiple
 placeholder = st.empty()
 bad_placeholder = st.empty()
 
+st.caption("Resultados de imagenes con problemas")
 dataframe = pd.DataFrame(columns=["archivo", "predicción", "confianza"])
+
+st.caption("Todos los resultados")
 bad_dataframe = pd.DataFrame(columns=["archivo", "predicción", "confianza"])
 
 with st.container():
-    st.caption("Resultados de imagenes con problemas")
+    
     bad_placeholder.dataframe(bad_dataframe)
-
-    st.caption("Todos los resultados")
     placeholder.dataframe(dataframe)    
 
 @st.cache_data
