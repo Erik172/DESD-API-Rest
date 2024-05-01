@@ -107,7 +107,6 @@ def process_pdf_file(uploaded_pdf, show_image, version="v1"):
                 image = open(f"temp/temp_{i}.jpg", "rb")
                 API_URL = f"{API_URL_BASE}/{version}"
                 response = requests.post(API_URL, files={"image": image})
-                response = response.json()
 
                 logging.info(response.status_code)
 
@@ -116,6 +115,10 @@ def process_pdf_file(uploaded_pdf, show_image, version="v1"):
                     dataframe = pd.concat([dataframe, pd.DataFrame({"archivo": [pdf.name], "pagina": [f'Page {i + 1}'], "predicción": ["Error al procesar"], "confianza": [0]})], ignore_index=True)
                     
                     continue
+                
+                response = response.json()
+
+                
                 #change names to spanish
                 response['data'][0]['name'] = "rotado" if response['data'][0]['name'] == "rotated" else "no rotado"
 
