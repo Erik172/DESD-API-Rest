@@ -1,11 +1,13 @@
 from pdf2image import convert_from_bytes
-import matplotlib.pyplot as plt
+import logging
 import streamlit as st
 import pandas as pd
 import requests
 import os
 
 API_URL_BASE = "http://localhost:5000/rode"
+
+logging.basicConfig(level=logging.DEBUG, format="%(asctime)s - %(levelname)s - %(message)s", datefmt="%Y-%m-%d %H:%M:%S", filename="rode.log")
 
 st.set_page_config(
     page_title="RoDe (Rotation Detection)",
@@ -16,11 +18,6 @@ st.set_page_config(
 
 st.title("RoDe (Rotation Detection) Detección de rotación 🔄")
 st.markdown("Esta página es para detectar la rotación en las imágenes y archivos PDF. Puede subir imágenes o archivos PDF para obtener las predicciones.")
-
-# version = st.selectbox(
-#     "Select the version of the model to use",
-#     ("v1", "v2")
-# )
 
 version = "v1"
     
@@ -49,7 +46,8 @@ def process_uploaded_images(uploaded_file, show_image, version="v1"):
     global bad_placeholder
     global bad_dataframe
     global dataframe
-    with st.spinner("Processing..."):
+
+    with st.spinner("Procesando..."):
         for file in uploaded_file:
             image = file.read()
             API_URL = f"{API_URL_BASE}/{version}"
@@ -91,23 +89,19 @@ def process_uploaded_images(uploaded_file, show_image, version="v1"):
             with st.container():
                 st.dataframe(dataframe)
 
-                csv = convert_df(dataframe)
-
-                st.download_button(
-                    label="Download data as CSV",
-                    data=csv,
-                    file_name=f'{file.name}_results.csv', # 'tilde_results.csv'
-                    mime='text/csv',
-                )
-
-def process_pdf_file(uploaded_file, show_image, version="v1"):
+def process_pdf_file(uploaded_pdf, show_image, version="v1"):
     global bad_placeholder
     global bad_dataframe
     global dataframe
-    with st.spinner("Processing..."):
+
+    with st.spinner("Procesando..."):
+        logging.info("Processing PDF file...")
+        logging.info(f"Uploaded PDF: {uploaded_pdf}")
         for pdf in uploaded_pdf:
+            logging.info(f"Processing PDF: {pdf.name}")
             images = convert_from_bytes(pdf.read())
             for i, image in enumerate(images):
+                logging.info(f"Processing page {i + 1} of the PDF {pdf.name}")
                 image.save(f"temp/temp_{i}.jpg")
                 image_path = f"temp/temp_{i}.jpg"
                 image = open(f"temp/temp_{i}.jpg", "rb")
@@ -115,6 +109,13 @@ def process_pdf_file(uploaded_file, show_image, version="v1"):
                 response = requests.post(API_URL, files={"image": image})
                 response = response.json()
 
+                logging.info(response.status_code)
+
+                if response.status_code != 200:
+                    st.error(f":warning: Error al procesar la página {i + 1} del PDF {pdf.name}.")
+                    dataframe = pd.concat([dataframe, pd.DataFrame({"archivo": [pdf.name], "pagina": [f'Page {i + 1}'], "predicción": ["Error al procesar"], "confianza": [0]})], ignore_index=True)
+                    
+                    continue
                 #change names to spanish
                 response['data'][0]['name'] = "rotado" if response['data'][0]['name'] == "rotated" else "no rotado"
 
@@ -123,8 +124,8 @@ def process_pdf_file(uploaded_file, show_image, version="v1"):
                 data = {
                     "archivo": [pdf.name],
                     "pagina": [f'Page {i + 1}'], # "Page 1
-                    "prediction": [response['data'][0]['name']],
-                    "confidence": [response['data'][0]['confidence'] * 100]
+                    "predicción": [response['data'][0]['name']],
+                    "confianza": [response['data'][0]['confidence'] * 100]
                 }
 
                 if version == "v1":
@@ -161,15 +162,6 @@ def process_pdf_file(uploaded_file, show_image, version="v1"):
                 
                 with st.container():
                     st.dataframe(dataframe)
-    
-                    csv = convert_df(dataframe)
-    
-                    st.download_button(
-                        label="Download data as CSV",
-                        data=csv,
-                        file_name=f'{uploaded_file.name}_results.csv', # 'tilde_results.csv'
-                        mime='text/csv',
-                    )
 
 def main():
     if uploaded_file:
