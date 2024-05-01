@@ -109,7 +109,7 @@ def process_pdf_file(uploaded_file, show_image, version="v1"):
 
                     prediction, confidence = st.columns(2)
                     prediction.metric("Predicción", response['data'][0]['name'])
-                    confidence.metric("Confianza", f'{response['data'][0]['confidence'] * 100} %')
+                    confidence.metric("Confianza", f"{response['data'][0]['confidence'] * 100} %")
                     dataframe = pd.concat([dataframe, pd.DataFrame({"archivo": [pdf.name], "pagina": [f'Página {i + 1}'], "predicción": [response['data'][0]['name']], "confianza": [response['data'][0]['confidence'] * 100]})], ignore_index=True)
                     if response['data'][0]['name'] == "con corte informacion":
                         st.error(f':warning: La Página **{i + 1}** en el PDF "**{pdf.name}**" tiene cortes de información.')

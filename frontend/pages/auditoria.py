@@ -65,15 +65,15 @@ def process_uploaded_images(uploaded_file, show_image):
 
             tilted, tilded_confidence = st.columns(2)
             tilted.metric("Inclinado", response['tilde']['name'])
-            tilded_confidence.metric("Confianza", f'{response['tilde']['confidence'] * 100} %')
+            tilded_confidence.metric("Confianza", f"{response['tilde']['confidence'] * 100} %")
 
             rotated, rotated_confidence = st.columns(2)
             rotated.metric("Rotado", response['rode']['name'])
-            rotated_confidence.metric("Confianza", f'{response['rode']['confidence'] * 100} %')
+            rotated_confidence.metric("Confianza", f"{response['rode']['confidence'] * 100} %")
 
             cut, cut_confidence = st.columns(2)
             cut.metric("Cortado", response['cude']['name'])
-            cut_confidence.metric("Confianza", f'{response['cude']['confidence'] * 100} %')
+            cut_confidence.metric("Confianza", f"{response['cude']['confidence'] * 100} %")
 
             data = {
                 "archivo": [file.name],
@@ -142,21 +142,21 @@ def process_pdf_file(uploaded_file, show_image):
                 # change names to spanish
                 response['tilde']['name'] = "inclinado" if response['tilde']['name'] == "tilted" else "no inclinado"
                 response['rode']['name'] = "rotado" if response['rode']['name'] == "rotated" else "no rotado"
-                response['cude']['name'] = "con corte informacion" if response['cude']['name'] == "cut" else "sin corte informacion"
+                # response['cude']['name'] = "con corte informacion" if response['cude']['name'] == "cut" else "sin corte informacion"
 
                 st.caption(f"Pagina {i + 1} del PDF {pdf.name}")
 
                 tilted, tilded_confidence = st.columns(2)
                 tilted.metric("Inclinado", response['tilde']['name'])
-                tilded_confidence.metric("Confianza", f'{response['tilde']['confidence'] * 100} %')
+                tilded_confidence.metric("Confianza", f"{response['tilde']['confidence'] * 100} %")
 
                 rotated, rotated_confidence = st.columns(2)
                 rotated.metric("Rotado", response['rode']['name'])
-                rotated_confidence.metric("Confianza", f'{response['rode']['confidence'] * 100} %')
+                rotated_confidence.metric("Confianza", f"{response['rode']['confidence'] * 100} %")
 
-                cut, cut_confidence = st.columns(2)
-                cut.metric("Cortado", response['cude']['name'])
-                cut_confidence.metric("Confianza", f'{response['cude']['confidence'] * 100} %')
+                # cut, cut_confidence = st.columns(2)
+                # cut.metric("Cortado", response['cude']['name'])
+                # cut_confidence.metric("Confianza", f"{response['cude']['confidence'] * 100} %")
 
                 data = {
                     "archivo": [pdf.name],
