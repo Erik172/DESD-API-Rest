@@ -4,6 +4,7 @@
 data/
 backend/resources/*.png
 frontend/temp/*.jpg
+backend/temp/*.jpg
 
 ### Flask ###
 instance/*
