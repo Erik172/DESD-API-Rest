@@ -1,12 +1,11 @@
 from pdf2image import convert_from_bytes
 from datetime import datetime
-import matplotlib.pyplot as plt
 import streamlit as st
 import pandas as pd
-import requests
 import os
 
-API_URL_BASE = "http://localhost:5000/tilde"
+from process_files import ImageProccesing
+from display_metrics import single_model_metrics
 
 st.set_page_config(
     page_title="TilDe (Tilted Detection)",
@@ -16,99 +15,105 @@ st.set_page_config(
 )
 
 st.title("TilDe (Tilted Detection) Detección de inclinación 📐")
-st.markdown("Esta página es para detectar la inclinación en las imágenes y archivos PDF. Puede subir imágenes o archivos PDF para obtener las predicciones.")
-
-# version = st.selectbox(
-#     "Select the version of the model to use",
-#     ("v1", "v2")
-# )
 
 version = "v1"
-
-@st.cache_data(persist='disk')
-def convert_df(dataframe):
-    return dataframe.to_csv().encode("utf-8")
 
 show_image = st.checkbox("Mostar imagen previa", value=False)
 uploaded_file = st.file_uploader("Subir Imagenes", type=["jpg", "jpeg", "png", "tif", "tiff"], accept_multiple_files=True)
 uploaded_pdf = st.file_uploader("Subir Archivos PDF", type=["pdf"], accept_multiple_files=True)
 
+st.caption("Resultados de imagenes con problemas")
+bad_placeholder = st.empty()
 
+st.caption("Todos los resultados")
 placeholder = st.empty()
-placeholder_download = st.empty()
 
-dataframe = pd.DataFrame(columns=["archivo", "predicción", "confianza"])
-placeholder.dataframe(dataframe)   
+bad_dataframe = pd.DataFrame(columns=["archivo", "predicción", "confianza", "tiempo(s)"])
+dataframe = pd.DataFrame(columns=["archivo", "predicción", "confianza", "tiempo(s)"])
+
+with st.container():
+    bad_placeholder.dataframe(bad_dataframe)
+    placeholder.dataframe(dataframe)   
 
 def process_uploaded_images(uploaded_file, show_image, version="v1"):
     global dataframe
-    with st.spinner("Processing..."):
+    global bad_dataframe
+
+    with st.spinner(f'Procesando {len(uploaded_file)} imagenes...'):
+        st.info(f"Procesando {len(uploaded_file)} imagenes...")
+        st.info(f"Proceso incio a las {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+        
         for file in uploaded_file:
             image = file.read()
-            API_URL = f"{API_URL_BASE}/{version}"
-            response = requests.post(API_URL, files={"image": image})
-            response = response.json()
+            response = ImageProccesing("tilde").process_file(image, version)
 
             # cambiar nombres a español
             response['data'][0]['name'] = "inclinado" if response['data'][0]['name'] == "tilted" else "no inclinado"
             response['data'][1]['name'] = "inclinado" if response['data'][1]['name'] == "tilted" else "no inclinado"
 
+            data = {
+                    "archivo": [file.name],
+                    "predicción": [response['data'][0]['name']],
+                    "confianza": [response['data'][0]['confidence']],
+                    "tiempo(s)": [response['time']],
+                    "fecha": [datetime.now().strftime("%Y-%m-%d %H:%M:%S")]
+            }
+
             st.caption(file.name)   
 
             if version == "v1":
-                st.progress(response['data'][0]['confidence'], f"{response['data'][0]['name']}, {response['data'][0]['confidence'] * 100} %")
-                st.progress(response['data'][1]['confidence'], f"{response['data'][1]['name']}, {response['data'][1]['confidence'] * 100} %")
-
-                prediction, confidence = st.columns(2)
-                prediction.metric("Predicción", response['data'][0]['name'])
-                confidence.metric("Confianza", f'{response['data'][0]['confidence'] * 100} %')
-                dataframe = pd.concat([dataframe, pd.DataFrame({"archivo": [file.name], "predicción": [response['data'][0]['name']], "confianza": [response['data'][0]['confidence'] * 100]})], ignore_index=True)
+                single_model_metrics(response)
+                dataframe = pd.concat([dataframe, pd.DataFrame(data)], ignore_index=True)
 
                 if response['data'][0]['name'] == "inclinado":
-                    st.error(f':warning: La imagen "**{file.name}**" está inclinada. Por favor, enderece la imagen.')
-
-            if version == "v2":
-                pass
-
+                    bad_dataframe = pd.concat([bad_dataframe, pd.DataFrame(data)], ignore_index=True)
+                    st.error(f':warning: La imagen "**{file.name}**" está inclinada.')
             
             if show_image:
                 st.image(image, use_column_width=True, caption="Uploaded Image")
-            print(response)
-            st.divider()
-            placeholder.dataframe(dataframe)
 
-        if dataframe.shape[0] > 0:
-            st.dataframe(dataframe)
+            st.divider()
+
+            placeholder.dataframe(dataframe)
+            bad_placeholder.dataframe(bad_dataframe)
 
 def process_pdf_file(uploaded_file, show_image, version="v1"):
     global dataframe
-    with st.spinner("Processing..."):
+    global bad_dataframe
+
+    with st.spinner(f"Procesando {len(uploaded_file)} archivos PDF..."):
+        st.info(f"Procesando {len(uploaded_file)} archivos PDF...")
+        st.info(f"Proceso incio a las {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
         for pdf in uploaded_file:
             images = convert_from_bytes(pdf.read())
             for i, image in enumerate(images):
                 image.save(f"temp/temp_{i}.jpg")
                 image_path = f"temp/temp_{i}.jpg"
-                image = open(f"temp/temp_{i}.jpg", "rb")
-                API_URL = f"{API_URL_BASE}/{version}"
-                response = requests.post(API_URL, files={"image": image})
-                response = response.json()
+
+                with open(f"temp/temp_{i}.jpg", "rb") as image:
+                    response = ImageProccesing("tilde").process_file(image, version)
 
                 # cambiar nombres a español
                 response['data'][0]['name'] = "inclinado" if response['data'][0]['name'] == "tilted" else "no inclinado"
                 response['data'][1]['name'] = "inclinado" if response['data'][1]['name'] == "tilted" else "no inclinado"
 
+                data = {
+                    "archivo": [pdf.name],
+                    "pagina": [f'Página {i + 1}'],
+                    "predicción": [response['data'][0]['name']],
+                    "confianza": [response['data'][0]['confidence'] * 100],
+                    "tiempo(s)": [response['time']],
+                    "fecha": [datetime.now().strftime("%Y-%m-%d %H:%M:%S")]
+                }
+
                 st.caption(f"Página {i + 1} del PDF {pdf.name}")
 
                 if version == "v1":
-                    st.progress(response['data'][0]['confidence'], f"{response['data'][0]['name']}, {response['data'][0]['confidence'] * 100} %")
-                    st.progress(response['data'][1]['confidence'], f"{response['data'][1]['name']}, {response['data'][1]['confidence'] * 100} %")
-
-                    prediction, confidence = st.columns(2)
-                    prediction.metric("Predicción", response['data'][0]['name'])
-                    confidence.metric("Confianza", f'{response['data'][0]['confidence'] * 100} %')
-                    dataframe = pd.concat([dataframe, pd.DataFrame({"archivo": [pdf.name], "pagina": [f'Página {i + 1}'], "predicción": [response['data'][0]['name']], "confianza": [response['data'][0]['confidence'] * 100]})], ignore_index=True)
+                    single_model_metrics(response)
+                    dataframe = pd.concat([dataframe, pd.DataFrame(data)], ignore_index=True)
 
                     if response['data'][0]['name'] == "inclinado":
+                        bad_dataframe = pd.concat([bad_dataframe, pd.DataFrame(data)], ignore_index=True)
                         st.error(f':warning: La **Página {i + 1}** en el PDF "**{pdf.name}**" está inclinada.')
 
                 if show_image:
@@ -120,11 +125,8 @@ def process_pdf_file(uploaded_file, show_image, version="v1"):
                     print("PermissionError: Unable to delete the temporary file.")
 
                 st.divider()
+                bad_placeholder.dataframe(bad_dataframe)
                 placeholder.dataframe(dataframe)
-
-        if dataframe.shape[0] > 0:
-            st.dataframe(dataframe)
-                
 
 def main():
     if uploaded_file:

@@ -1,11 +1,18 @@
 from flask import Flask
 from flask_restful import Api
+import sentry_sdk
 
 from resources import (
     TilDeV1,
     RoDeV1,
     CuDeV1,
     Audit
+)
+
+sentry_sdk.init(
+    dsn="https://e9cca8077d072637f2c5934a3327536c@o4504133595365376.ingest.us.sentry.io/4507189202452480",
+    traces_sample_rate=1.0,
+    profiles_sample_rate=1.0,
 )
 
 app = Flask(__name__)
@@ -17,5 +24,10 @@ api.add_resource(CuDeV1, "/cude/v1")
 
 api.add_resource(Audit, "/audit")
 
+@app.route("/test-sentry")
+def test_sentry():
+    division_by_zero = 1 / 0
+    return division_by_zero
+
 if __name__ == "__main__":
-    app.run(debug=False, host="0.0.0.0", port=5000)
+    app.run(debug=True, host="0.0.0.0", port=5000)

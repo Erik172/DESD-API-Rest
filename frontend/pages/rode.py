@@ -1,13 +1,13 @@
 from pdf2image import convert_from_bytes
-import logging
+from datetime import datetime
+import sentry_sdk
 import streamlit as st
 import pandas as pd
-import requests
 import os
 
-API_URL_BASE = "http://localhost:5000/rode"
+from process_files import ImageProccesing
+from display_metrics import single_model_metrics
 
-logging.basicConfig(level=logging.DEBUG, format="%(asctime)s - %(levelname)s - %(message)s", datefmt="%Y-%m-%d %H:%M:%S", filename="rode.log")
 
 st.set_page_config(
     page_title="RoDe (Rotation Detection)",
@@ -17,7 +17,6 @@ st.set_page_config(
 )
 
 st.title("RoDe (Rotation Detection) Detección de rotación 🔄")
-st.markdown("Esta página es para detectar la rotación en las imágenes y archivos PDF. Puede subir imágenes o archivos PDF para obtener las predicciones.")
 
 version = "v1"
     
@@ -31,8 +30,8 @@ bad_placeholder = st.empty()
 st.caption("Todos los resultados")
 placeholder = st.empty()
 
-dataframe = pd.DataFrame(columns=["archivo", "predicción", "confianza"])
-bad_dataframe = pd.DataFrame(columns=["archivo", "predicción", "confianza"])
+dataframe = pd.DataFrame(columns=["archivo", "predicción", "confianza", "tiempo(s)"])
+bad_dataframe = pd.DataFrame(columns=["archivo", "predicción", "confianza", "tiempo(s)"])
 
 with st.container():
     bad_placeholder.dataframe(bad_dataframe)
@@ -43,16 +42,16 @@ def convert_df(dataframe):
     return dataframe.to_csv(index=False).encode("utf-8")
 
 def process_uploaded_images(uploaded_file, show_image, version="v1"):
-    global bad_placeholder
     global bad_dataframe
     global dataframe
 
     with st.spinner("Procesando..."):
+        st.info(f'Procesando **{len(uploaded_file)}** imágenes.')
+        st.info(f'Inicio del procesamiento: **{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}**')
+
         for file in uploaded_file:
             image = file.read()
-            API_URL = f"{API_URL_BASE}/{version}"
-            response = requests.post(API_URL, files={"image": image})
-            response = response.json()
+            response = ImageProccesing("rode").process_file(image, version)
 
             # cambiar nombres a español
             response['data'][0]['name'] = "rotado" if response['data'][0]['name'] == "rotated" else "no rotado"
@@ -61,18 +60,15 @@ def process_uploaded_images(uploaded_file, show_image, version="v1"):
             data = {
                     "archivo": [file.name],
                     "predicción": [response['data'][0]['name']],
-                    "confianza": [response['data'][0]['confidence'] * 100]
+                    "confianza": [response['data'][0]['confidence'] * 100],
+                    "tiempo(s)": [response['time']],
+                    "fecha": [datetime.now().strftime("%Y-%m-%d %H:%M:%S")]
             }
 
             st.caption(file.name)   
 
             if version == "v1":
-                st.progress(response['data'][0]['confidence'], f"{response['data'][0]['name']}, {round(response['data'][0]['confidence'], 3)}")
-                st.progress(response['data'][1]['confidence'], f"{response['data'][1]['name']}, {round(response['data'][1]['confidence'], 3)}")
-
-                prediction, confidence = st.columns(2)
-                prediction.metric("Prediction", response['data'][0]['name'])
-                confidence.metric("Confidence", round(response['data'][0]['confidence'], 4))
+                single_model_metrics(response)
 
                 dataframe = pd.concat([dataframe, pd.DataFrame(data)], ignore_index=True)
 
@@ -82,67 +78,50 @@ def process_uploaded_images(uploaded_file, show_image, version="v1"):
 
             if show_image:
                 st.image(image, use_column_width=True, caption="Uploaded Image")
+
             st.divider()
+
             placeholder.dataframe(dataframe)
             bad_placeholder.dataframe(bad_dataframe)
 
-        if dataframe.shape[0] > 0:
-            with st.container():
-                st.dataframe(dataframe)
 
 def process_pdf_file(uploaded_pdf, show_image, version="v1"):
-    global bad_placeholder
     global bad_dataframe
     global dataframe
 
-    with st.spinner("Procesando..."):
-        logging.info("Processing PDF file...")
-        logging.info(f"Uploaded PDF: {uploaded_pdf}")
+    with st.spinner(f"Procesando {len(uploaded_pdf)} PDFs..."):
+        st.info(f'Procesando **{len(uploaded_pdf)}** PDFs.')
+        st.info(f'Inicio del procesamiento: **{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}**')
         for pdf in uploaded_pdf:
-            logging.info(f"Processing PDF: {pdf.name}")
             images = convert_from_bytes(pdf.read())
             for i, image in enumerate(images):
-                logging.info(f"Processing page {i + 1} of the PDF {pdf.name}")
                 image.save(f"temp/temp_{i}.jpg")
                 image_path = f"temp/temp_{i}.jpg"
-                image = open(f"temp/temp_{i}.jpg", "rb")
-                API_URL = f"{API_URL_BASE}/{version}"
-                response = requests.post(API_URL, files={"image": image})
 
-                logging.info(response.status_code)
-                if response.status_code != 200:
-                    st.error(f":warning: Error al procesar la página {i + 1} del PDF {pdf.name}.")
-                    dataframe = pd.concat([dataframe, pd.DataFrame({"archivo": [pdf.name], "pagina": [f'Page {i + 1}'], "predicción": ["Error al procesar"], "confianza": [0]})], ignore_index=True)
-                    continue
+                with open(image_path, "rb") as image:
+                    response = ImageProccesing("rode").process_file(image, version)
 
-                response = response.json()
                 #change names to spanish
                 response['data'][0]['name'] = "rotado" if response['data'][0]['name'] == "rotated" else "no rotado"
 
-                st.caption(f"Page {i + 1} del PDF {pdf.name}")
+                st.caption(f"Pagina {i + 1} del PDF {pdf.name}")
 
                 data = {
                     "archivo": [pdf.name],
                     "pagina": [f'Page {i + 1}'], # "Page 1
                     "predicción": [response['data'][0]['name']],
-                    "confianza": [response['data'][0]['confidence'] * 100]
+                    "confianza": [response['data'][0]['confidence'] * 100],
+                    "tiempo(s)": [response['time']],
+                    "fecha": [datetime.now().strftime("%Y-%m-%d %H:%M:%S")]
                 }
 
                 if version == "v1":
-                    st.progress(response['data'][0]['confidence'], f"{response['data'][0]['name']}, {round(response['data'][0]['confidence'], 3)}")
-                    st.progress(response['data'][1]['confidence'], f"{response['data'][1]['name']}, {round(response['data'][1]['confidence'], 3)}")
-
-                    prediction, confidence = st.columns(2)
-                    prediction.metric("Prediction", response['data'][0]['name'])
-                    confidence.metric("Confidence", round(response['data'][0]['confidence'], 4))
+                    single_model_metrics(response)
                     dataframe = pd.concat([dataframe, pd.DataFrame(data)], ignore_index=True)
 
                     if response['data'][0]['name'] == "rotado":
                         bad_dataframe = pd.concat([bad_dataframe, pd.DataFrame(data)], ignore_index=True)
                         st.error(f':warning: La Página **{i + 1}** en el PDF está rotada.')
-
-                if version == "v2":
-                    pass
 
                 if show_image:
                     st.image(image_path, use_column_width=True, caption="Uploaded Image", output_format="JPEG")
@@ -150,19 +129,12 @@ def process_pdf_file(uploaded_pdf, show_image, version="v1"):
                 try:
                     os.remove(f"temp/temp_{i}.jpg")
                 except PermissionError:
-                    logging.error(f"Error al eliminar el archivo {i}.")
-                    os.system(f"rm temp/temp_{i}.jpg")
-                    pass
+                    print(f"Error al eliminar el archivo {image_path}")
 
                 st.divider()
 
                 bad_placeholder.dataframe(bad_dataframe)
                 placeholder.dataframe(dataframe)
-
-        if dataframe.shape[0] > 0:
-                
-                with st.container():
-                    st.dataframe(dataframe)
 
 def main():
     if uploaded_file:

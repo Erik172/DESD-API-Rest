@@ -5,7 +5,8 @@ git fetch
 git pull
 
 REM Ejecutar el servidor backend en un terminal
-start cmd /k py backend/main.py
+start cmd /k cd backend
+start cmd /k py main.py
 if %errorlevel% neq 0 (
     start cmd /k python3 backend/main.py
 )
@@ -14,4 +15,5 @@ REM Esperar unos segundos para asegurar que el servidor backend esté en funcion
 timeout /t 5
 
 REM Ejecutar el servidor Streamlit en otro terminal
-start cmd /k streamlit run frontend/main.py
+start cmd /k cd frontend
+start cmd /k streamlit run main.py
