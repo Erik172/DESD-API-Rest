@@ -1,4 +1,6 @@
+import os
 import base64
+import random
 import sentry_sdk
 from flask import request, jsonify
 from flask_restful import Resource
@@ -22,10 +24,11 @@ class CuDeV1(Resource):
             image = request.files["image"]
             image = image.read()
             image = base64.b64encode(image)
-            with open('temp.png', 'wb') as f:
+            file_name = f'temp/{random.choices("abcdefghijklmnopqrstuvwxyz", k=10)}.jpg'
+            with open(file_name, 'wb') as f:
                 f.write(base64.b64decode(image))
 
-            response = model('temp.png')
+            response = model(file_name)
             response = parse_result_yolov8(response[0])
             response['time'] = (datetime.now() - start_time).total_seconds()
 
@@ -33,5 +36,7 @@ class CuDeV1(Resource):
                 key="CuDeV1Count",
                 tags={"model": "CuDeV1"}
             )
+
+            os.remove(file_name)
 
             return jsonify(response)
