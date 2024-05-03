@@ -11,7 +11,7 @@ from src import parse_result_yolov8
 
 class RoDeV1(Resource):
     def post(self):
-        with sentry_sdk.start_span(op="RoDeV1", description="Rotation Detection"):
+        with sentry_sdk.metrics.timing(key="RoDeV1", tags={"model": "RoDeV1"}):
             start_time = datetime.now()
             model_path = 'models/rode_v1.pt'
             
@@ -30,10 +30,8 @@ class RoDeV1(Resource):
             response = parse_result_yolov8(response[0])
             response['time'] = (datetime.now() - start_time).total_seconds()
 
-            sentry_sdk.metrics.distribution(
-                key="RoDeV1",
-                value=response['time'],
-                unit="seconds",
+            sentry_sdk.metrics.incr(
+                key="RoDeV1Count",
                 tags={"model": "RoDeV1"}
             )
 

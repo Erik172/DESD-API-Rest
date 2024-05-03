@@ -9,7 +9,7 @@ from src import parse_result_yolov8
 
 class TilDeV1(Resource):
     def post(self):
-        with sentry_sdk.start_span(op="TilDeV1", description="Tilted Detection"):
+        with sentry_sdk.metrics.timing(key="TilDeV1", tags={"model": "TilDeV1"}):
             start_time = datetime.now()
             model_path = 'models/tilde_v1.pt'
             
@@ -28,10 +28,8 @@ class TilDeV1(Resource):
             response = parse_result_yolov8(response[0])
             response['time'] = (datetime.now() - start_time).total_seconds()
 
-            sentry_sdk.metrics.distribution(
-                key="TilDeV1",
-                value=response['time'],
-                unit="seconds",
+            sentry_sdk.metrics.incr(
+                key="TilDeV1Count",
                 tags={"model": "TilDeV1"}
             )
 

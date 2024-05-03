@@ -2,6 +2,7 @@ import base64
 import sentry_sdk
 from flask import request, jsonify
 from flask_restful import Resource
+import sentry_sdk.metrics
 from ultralytics import YOLO
 from datetime import datetime
 
@@ -9,7 +10,7 @@ from src import parse_result_yolov8
 
 class CuDeV1(Resource):
     def post(self):
-        with sentry_sdk.start_span(op="CuDeV1", description="Cuboid Detection"):
+        with sentry_sdk.metrics.timing(key="CuDeV1", tags={"model": "CuDeV1"}):
             start_time = datetime.now()
             model_path = 'models/cude_v1.pt'
             
@@ -28,10 +29,8 @@ class CuDeV1(Resource):
             response = parse_result_yolov8(response[0])
             response['time'] = (datetime.now() - start_time).total_seconds()
 
-            sentry_sdk.metrics.distribution(
-                key="CuDeV1",
-                value=response['time'],
-                unit="seconds",
+            sentry_sdk.metrics.incr(
+                key="CuDeV1Count",
                 tags={"model": "CuDeV1"}
             )
 
