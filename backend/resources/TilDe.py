@@ -24,7 +24,7 @@ class TilDeV1(Resource):
             image = request.files["image"]
             image = image.read()
             image = base64.b64encode(image)
-            file_name = f'temp/{random.choices("abcdefghijklmnopqrstuvwxyz", k=10)}.jpg'
+            file_name = f'temp/{"".join(random.choices("abcdefghijklmnopqrstuvwxyz", k=10))}.jpg'
             with open(file_name, 'wb') as f:
                 f.write(base64.b64decode(image))
 
