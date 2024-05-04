@@ -2,10 +2,14 @@ from pdf2image import convert_from_bytes
 from datetime import datetime
 import streamlit as st
 import pandas as pd
+import random
 import os
 
-from frontend.resources.process_files import ImageProccesing
-from frontend.resources.display_metrics import single_model_metrics
+from resources import (
+    ImageProccesing, 
+    single_model_metrics, 
+    hoja_control
+)
 
 st.set_page_config(
     page_title="CuDe (Cut Detection)",
@@ -27,6 +31,8 @@ bad_placeholder = st.empty()
 st.caption("Todos los resultados")
 placeholder = st.empty()
 
+alerts = st.empty()
+
 dataframe = pd.DataFrame(columns=["archivo", "predicción", "confianza", "tiempo(s)"])
 bad_dataframe = pd.DataFrame(columns=["archivo", "predicción", "confianza", "tiempo(s)"])
 
@@ -38,12 +44,15 @@ def process_uploaded_images(uploaded_file, show_image, version="v1"):
     global dataframe
     global bad_dataframe
 
+    errors = []
+
     with st.spinner(f"Procesando {len(uploaded_file)} imagenes..."):
         st.info(f"Procesando {len(uploaded_file)} imagenes...")
         st.info(f"Proceso incio a las {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
 
         for file in uploaded_file:
             image = file.read()
+            filtered = hoja_control(image)
             response = ImageProccesing("cude").process_file(image, version)
 
             # cambiar nombres a español
@@ -57,6 +66,11 @@ def process_uploaded_images(uploaded_file, show_image, version="v1"):
                     "tiempo(s)": [response['time']],
                     "fecha": [datetime.now().strftime("%Y-%m-%d %H:%M:%S")]
             }
+
+            if filtered:
+                st.toast(f'Existe una hoja de control en la imagen **{file.name}**', icon="⚠️")
+                errors.append(f'Existe una hoja de control en la imagen **{file.name}**')
+                data["filtros"] = ["hoja de control"]
 
             st.caption(file.name)   
 
@@ -72,6 +86,9 @@ def process_uploaded_images(uploaded_file, show_image, version="v1"):
             if show_image:
                 st.image(image, use_column_width=True, caption="Uploaded Image")
 
+            if errors:
+                alerts.error(f':warning: {", ".join(errors)}')
+
             st.divider()
 
             placeholder.dataframe(dataframe)
@@ -81,6 +98,8 @@ def process_pdf_file(uploaded_file, show_image, version="v1"):
     global dataframe
     global bad_dataframe
 
+    errors = []
+
     with st.spinner(f"Procesando {len(uploaded_file)} PDFs..."):
         st.info(f"Procesando {len(uploaded_file)} PDFs...")
         st.info(f"Proceso incio a las {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
@@ -88,9 +107,12 @@ def process_pdf_file(uploaded_file, show_image, version="v1"):
         for pdf in uploaded_file:
             images = convert_from_bytes(pdf.read())
             for i, image in enumerate(images):
-                image.save(f"temp/temp_{i}.jpg")
-                image_path = f"temp/temp_{i}.jpg"
-                with open(f"temp/temp_{i}.jpg", "rb") as image:
+                name_file = f"temp/{''.join(random.choices('abcdefghijklmnopqrstuvwxyz', k=10))}.jpg"
+                image.save(name_file)
+                image_path = name_file
+                filtered = hoja_control(image)
+
+                with open(image_path, "rb") as image:
                     response = ImageProccesing("cude").process_file(image, version)
 
                 # cambiar nombres a español
@@ -105,6 +127,11 @@ def process_pdf_file(uploaded_file, show_image, version="v1"):
                         "fecha": [datetime.now().strftime("%Y-%m-%d %H:%M:%S")]
                 }
 
+                if filtered:
+                    st.toast(f'Existe una hoja de control en la pagina **{i + 1}** del PDF **{pdf.name}**', icon="⚠️")
+                    errors.append(f'Existe una hoja de control en la pagina **{i + 1}** del PDF **{pdf.name}**')
+                    data["filtros"] = ["hoja de control"]
+
                 st.caption(f"Página {i + 1}")
 
                 if version == "v1":
@@ -116,7 +143,10 @@ def process_pdf_file(uploaded_file, show_image, version="v1"):
                         st.error(f':warning: La Página **{i + 1}** en el PDF "**{pdf.name}**" tiene cortes de información.')
 
                 if show_image:
-                    st.image(image_path, use_column_width=True, caption="Uploaded Image", output_format="JPEG")
+                    if len(uploaded_file) < 20:
+                        st.image(image_path, use_column_width=True, caption=f"Página {i + 1} del PDF {pdf.name}")
+                    else:
+                        st.warning("Demasiados archivos para mostrar")
                 
                 try:
                     os.remove(f"temp/temp_{i}.jpg")

@@ -2,6 +2,7 @@ from pdf2image import convert_from_bytes
 from datetime import datetime
 import streamlit as st
 import pandas as pd
+import random
 import os
 
 from resources import (
@@ -32,6 +33,8 @@ bad_placeholder = st.empty()
 st.caption("Todos los resultados")
 placeholder = st.empty()
 
+alerts = st.empty()
+
 dataframe = pd.DataFrame(columns=["archivo", "predicción", "confianza", "tiempo(s)"])
 bad_dataframe = pd.DataFrame(columns=["archivo", "predicción", "confianza", "tiempo(s)"])
 
@@ -39,13 +42,11 @@ with st.container():
     bad_placeholder.dataframe(bad_dataframe)
     placeholder.dataframe(dataframe)    
 
-@st.cache_data
-def convert_df(dataframe):
-    return dataframe.to_csv(index=False).encode("utf-8")
-
 def process_uploaded_images(uploaded_file, show_image, version="v1"):
     global bad_dataframe
     global dataframe
+
+    errors = []
 
     with st.spinner("Procesando..."):
         st.info(f'Procesando **{len(uploaded_file)}** imágenes.')
@@ -54,6 +55,7 @@ def process_uploaded_images(uploaded_file, show_image, version="v1"):
         for file in uploaded_file:
             image = file.read()
             response = ImageProccesing("rode").process_file(image, version)
+            filtered = hoja_control(image)
 
             # cambiar nombres a español
             response['data'][0]['name'] = "rotado" if response['data'][0]['name'] == "rotated" else "no rotado"
@@ -66,6 +68,11 @@ def process_uploaded_images(uploaded_file, show_image, version="v1"):
                     "tiempo(s)": [response['time']],
                     "fecha": [datetime.now().strftime("%Y-%m-%d %H:%M:%S")]
             }
+
+            if filtered:
+                st.toast(f'Existe una hoja de control en la imagen **{file.name}**', icon="⚠️")
+                errors.append(f'Existe una hoja de control en la imagen **{file.name}**')
+                data["filtros"] = ["hoja de control"]
 
             st.caption(file.name)   
 
@@ -81,6 +88,9 @@ def process_uploaded_images(uploaded_file, show_image, version="v1"):
             if show_image:
                 st.image(image, use_column_width=True, caption="Uploaded Image")
 
+            if errors:
+                alerts.error(f':warning: {", ".join(errors)}')
+
             st.divider()
 
             placeholder.dataframe(dataframe)
@@ -91,14 +101,19 @@ def process_pdf_file(uploaded_pdf, show_image, version="v1"):
     global bad_dataframe
     global dataframe
 
+    errors = []
+
     with st.spinner(f"Procesando {len(uploaded_pdf)} PDFs..."):
         st.info(f'Procesando **{len(uploaded_pdf)}** PDFs.')
         st.info(f'Inicio del procesamiento: **{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}**')
+
         for pdf in uploaded_pdf:
             images = convert_from_bytes(pdf.read())
             for i, image in enumerate(images):
-                image.save(f"temp/temp_{i}.jpg")
-                image_path = f"temp/temp_{i}.jpg"
+                name_file_rand = f'temp/{"".join(random.choices("abcdefghijklmnopqrstuvwxyz", k=10))}.jpg'
+                image.save(name_file_rand)
+                image_path = name_file_rand
+                filtered = hoja_control(image)
 
                 with open(image_path, "rb") as image:
                     response = ImageProccesing("rode").process_file(image, version)
@@ -117,6 +132,11 @@ def process_pdf_file(uploaded_pdf, show_image, version="v1"):
                     "fecha": [datetime.now().strftime("%Y-%m-%d %H:%M:%S")]
                 }
 
+                if filtered:
+                    st.error(f':warning: Existe una hoja de control en la página **{i + 1}** del PDF **{pdf.name}**')
+                    errors.append(f'Existe una hoja de control en la página **{i + 1}** del PDF **{pdf.name}**')
+                    data["filtros"] = ["hoja de control"]
+
                 if version == "v1":
                     single_model_metrics(response)
                     dataframe = pd.concat([dataframe, pd.DataFrame(data)], ignore_index=True)
@@ -127,9 +147,12 @@ def process_pdf_file(uploaded_pdf, show_image, version="v1"):
 
                 if show_image:
                     st.image(image_path, use_column_width=True, caption="Uploaded Image", output_format="JPEG")
+
+                if errors:
+                    alerts.error(f':warning: {", ".join(errors)}')
                 
                 try:
-                    os.remove(f"temp/temp_{i}.jpg")
+                    os.remove(name_file_rand)
                 except PermissionError:
                     print(f"Error al eliminar el archivo {image_path}")
 
