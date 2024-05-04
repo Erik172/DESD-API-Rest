@@ -149,7 +149,7 @@ def process_pdf_file(uploaded_file, show_image, version="v1"):
                         st.warning("Demasiados archivos para mostrar")
                 
                 try:
-                    os.remove(f"temp/temp_{i}.jpg")
+                    os.remove(image_path)
                 except PermissionError:
                     print("Error al eliminar archivo temporal")
 
