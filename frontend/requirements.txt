@@ -5,3 +5,5 @@ pdf2image
 matplotlib
 opencv-python
 sentry-sdk
+numpy
+pytesseract
