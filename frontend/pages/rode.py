@@ -1,12 +1,14 @@
 from pdf2image import convert_from_bytes
 from datetime import datetime
-import sentry_sdk
 import streamlit as st
 import pandas as pd
 import os
 
-from process_files import ImageProccesing
-from display_metrics import single_model_metrics
+from resources import (
+    ImageProccesing, 
+    single_model_metrics, 
+    hoja_control
+)
 
 
 st.set_page_config(

@@ -4,8 +4,8 @@ import streamlit as st
 import pandas as pd
 import os
 
-from process_files import ImageProccesing
-from display_metrics import single_model_metrics
+from frontend.resources.process_files import ImageProccesing
+from frontend.resources.display_metrics import single_model_metrics
 
 st.set_page_config(
     page_title="CuDe (Cut Detection)",
