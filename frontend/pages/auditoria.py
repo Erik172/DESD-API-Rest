@@ -14,7 +14,7 @@ st.set_page_config(
 )
 
 st.title("Auditoría 🔍")
-st.markdown("Esta página es para auditar las imágenes y archivos PDF. Puede subir imágenes o archivos PDF para obtener las predicciones.")
+st.error(":warning: **¡Atención!** Esta pagina esta en desarrollo y puede no funcionar correctamente.")
     
 show_image = st.checkbox("Mostrar previzualización de la imagen", value=False)
 uploaded_file = st.file_uploader("Subir Imagenes", type=["jpg", "jpeg", "png", "tif", "tiff"], accept_multiple_files=True)
