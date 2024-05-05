@@ -1,6 +1,5 @@
 Flask
 flask-restful
-inference
 python-dotenv
 pandas
 torch

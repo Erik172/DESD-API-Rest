@@ -6,9 +6,9 @@ git pull
 
 REM Ejecutar el servidor backend en un terminal
 start cmd /k cd backend
-start cmd /k py main.py
+start cmd /k py app.py
 if %errorlevel% neq 0 (
-    start cmd /k python3 backend/main.py
+    start cmd /k python3 backend/app.py
 )
 
 REM Esperar unos segundos para asegurar que el servidor backend esté en funcionamiento
