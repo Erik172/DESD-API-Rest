@@ -35,6 +35,8 @@ placeholder = st.empty()
 
 alerts = st.empty()
 
+fin_process = st.empty()
+
 dataframe = pd.DataFrame(columns=["archivo", "predicción", "confianza", "tiempo(s)"])
 bad_dataframe = pd.DataFrame(columns=["archivo", "predicción", "confianza", "tiempo(s)"])
 
@@ -54,7 +56,7 @@ def process_uploaded_images(uploaded_file, show_image, version="v1"):
 
         for file in uploaded_file:
             image = file.read()
-            response = ImageProccesing("rode").process_file(image, version)
+            response = ImageProccesing("rode").process_file(image, version, file.name)
             filtered = hoja_control(image)
 
             # cambiar nombres a español
@@ -116,7 +118,7 @@ def process_pdf_file(uploaded_pdf, show_image, version="v1"):
                 filtered = hoja_control(image)
 
                 with open(image_path, "rb") as image:
-                    response = ImageProccesing("rode").process_file(image, version)
+                    response = ImageProccesing("rode").process_file(image, version, pdf.name, i + 1, "pdf")
 
                 #change names to spanish
                 response['data'][0]['name'] = "rotado" if response['data'][0]['name'] == "rotated" else "no rotado"
@@ -164,8 +166,10 @@ def process_pdf_file(uploaded_pdf, show_image, version="v1"):
 def main():
     if uploaded_file:
         process_uploaded_images(uploaded_file, show_image, version)
+        fin_process.info(f'Fin del procesamiento: **{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}**')
     if uploaded_pdf:
         process_pdf_file(uploaded_pdf, show_image, version)
+        fin_process.info(f'Fin del procesamiento: **{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}**')
 
 if __name__ == "__main__":
     main()

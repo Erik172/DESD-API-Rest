@@ -1,6 +1,7 @@
 from flask import Flask
 from flask_restful import Api
 import sentry_sdk
+import os
 
 from resources import (
     TilDeV1,
@@ -15,7 +16,10 @@ sentry_sdk.init(
     profiles_sample_rate=1.0,
 )
 
+basedir = os.path.abspath(os.path.dirname(__file__))
+
 app = Flask(__name__)
+app.config['SQLALCHEMY_DATABASE_URI'] ='sqlite:///' + os.path.join(basedir, 'database.db')
 api = Api(app)
             
 api.add_resource(TilDeV1, "/tilde/v1")
