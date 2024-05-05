@@ -1,6 +1,5 @@
 from pdf2image import convert_from_bytes
 from datetime import datetime
-import dask.dataframe as dd
 import streamlit as st
 import pandas as pd
 import os
@@ -41,8 +40,8 @@ placeholder = st.empty()
 
 alerts = st.empty()
 
-dataframe = dd.from_pandas(pd.DataFrame(columns=["archivo", "predicción", "confianza", "tiempo(s)"]), npartitions=1)
-bad_dataframe = dd.from_pandas(pd.DataFrame(columns=["archivo", "predicción", "confianza", "tiempo(s)"]), npartitions=1)
+dataframe = pd.DataFrame(columns=["archivo", "predicción", "confianza", "tiempo(s)"])
+bad_dataframe = pd.DataFrame(columns=["archivo", "predicción", "confianza", "tiempo(s)"])
 
 def process_uploaded_images(uploaded_file, show_image, version="v1"):
     global bad_dataframe
@@ -73,10 +72,10 @@ def process_uploaded_images(uploaded_file, show_image, version="v1"):
             if version == "v1":
                 single_model_metrics(response)
 
-                dataframe = dd.concat([dataframe, dd.from_pandas(pd.DataFrame(data), npartitions=1)], axis=0)
+                dataframe = pd.concat([dataframe, pd.DataFrame(data)], axis=0)
 
                 if response['data'][0]['name'] == "rotado":
-                    bad_dataframe = dd.concat([bad_dataframe, dd.from_pandas(pd.DataFrame(data), npartitions=1)], axis=0)
+                    bad_dataframe = pd.concat([bad_dataframe, pd.DataFrame(data)], axis=0)
                     st.error(f':warning: La imagen "**{file.name}**" está rotada.')
 
             if show_image:
@@ -87,8 +86,8 @@ def process_uploaded_images(uploaded_file, show_image, version="v1"):
 
             st.divider()
 
-            placeholder.dataframe(dataframe.compute())
-            bad_placeholder.dataframe(bad_dataframe.compute())
+            placeholder.dataframe(dataframe)
+            bad_placeholder.dataframe(bad_dataframe)
 
         fin_process.info(f'Fin del procesamiento: **{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}**, tiempo total (Segundos): **{round((datetime.now() - inicio_time).total_seconds(), 2)}**')
 
@@ -119,10 +118,10 @@ def process_pdf_file(uploaded_pdf, show_image, version="v1"):
 
                 if version == "v1":
                     single_model_metrics(response)
-                    dataframe = dd.concat([dataframe, dd.from_pandas(pd.DataFrame(data), npartitions=1)], axis=0)
+                    dataframe = pd.concat([dataframe, pd.DataFrame(data)], axis=0)
 
                     if response['data'][0]['name'] == "rotado":
-                        bad_dataframe = dd.concat([bad_dataframe, dd.from_pandas(pd.DataFrame(data), npartitions=1)], axis=0)
+                        bad_dataframe = pd.concat([bad_dataframe, pd.DataFrame(data)], axis=0)
                         st.error(f':warning: La Página **{i + 1}** en el PDF está rotada.')
 
                 if show_image:
@@ -138,8 +137,8 @@ def process_pdf_file(uploaded_pdf, show_image, version="v1"):
 
                 st.divider()
 
-                placeholder.dataframe(dataframe.compute())
-                bad_placeholder.dataframe(bad_dataframe.compute())
+                placeholder.dataframe(dataframe)
+                bad_placeholder.dataframe(bad_dataframe)
 
         fin_process.info(f'Fin del procesamiento: **{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}**, tiempo total: **{(datetime.now() - inicio_time).total_seconds()}** Segundos')
 

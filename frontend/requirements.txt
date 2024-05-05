@@ -7,4 +7,3 @@ opencv-python
 sentry-sdk
 numpy
 pytesseract
-dask

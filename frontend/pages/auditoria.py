@@ -1,10 +1,15 @@
 from pdf2image import convert_from_bytes
-from dask.distributed import Client
 import streamlit as st
 import pandas as pd
-import dask.dataframe as dd
 import requests
 import os
+
+from resources import (
+    single_model_metrics,
+    hoja_control,
+    procces_image_rode,
+    procces_pdf2image_rode
+)
 
 st.set_page_config(
     page_title="Auditoría",
