@@ -72,10 +72,10 @@ def process_uploaded_images(uploaded_file, show_image, version="v1"):
             if version == "v1":
                 single_model_metrics(response)
 
-                dataframe = pd.concat([dataframe, pd.DataFrame(data)], axis=0)
+                dataframe = pd.concat([dataframe, pd.DataFrame(data)], axis=0, ignore_index=True)
 
                 if response['data'][0]['name'] == "rotado":
-                    bad_dataframe = pd.concat([bad_dataframe, pd.DataFrame(data)], axis=0)
+                    bad_dataframe = pd.concat([bad_dataframe, pd.DataFrame(data)], axis=0, ignore_index=True)
                     st.error(f':warning: La imagen "**{file.name}**" está rotada.')
 
             if show_image:
@@ -118,10 +118,10 @@ def process_pdf_file(uploaded_pdf, show_image, version="v1"):
 
                 if version == "v1":
                     single_model_metrics(response)
-                    dataframe = pd.concat([dataframe, pd.DataFrame(data)], axis=0)
+                    dataframe = pd.concat([dataframe, pd.DataFrame(data)], axis=0, ignore_index=True)
 
                     if response['data'][0]['name'] == "rotado":
-                        bad_dataframe = pd.concat([bad_dataframe, pd.DataFrame(data)], axis=0)
+                        bad_dataframe = pd.concat([bad_dataframe, pd.DataFrame(data)], axis=0, ignore_index=True)
                         st.error(f':warning: La Página **{i + 1}** en el PDF está rotada.')
 
                 if show_image:
