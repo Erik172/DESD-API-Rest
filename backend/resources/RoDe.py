@@ -8,7 +8,10 @@ import sentry_sdk.metrics
 from ultralytics import YOLO
 from datetime import datetime
 
-from src import parse_result_yolov8
+from src import parse_result_yolov8, data_file_validation
+from src.filters import hoja_control
+
+from db import Work
 
 
 class RoDeV1(Resource):
@@ -22,6 +25,10 @@ class RoDeV1(Resource):
             if "image" not in request.files:
                 return {"error": "No file uploaded"}
             
+            request.form = data_file_validation(request)
+
+            work = Work(request.form["work_id"])
+            
             image = request.files["image"]
             image = image.read()
             image = base64.b64encode(image)
@@ -32,6 +39,21 @@ class RoDeV1(Resource):
             response = model(file_name)
             response = parse_result_yolov8(response[0])
             response['time'] = (datetime.now() - start_time).total_seconds()
+            response['model'] = "RoDeV1"
+
+            if "filtros" in request.form:
+                filtros = request.form["filtros"].split(",")
+                if "Hoja de Control" in filtros:
+                    if hoja_control(file_name):
+                        if "filtros" in response:
+                            response["filtros"].append("hoja de control")
+                        else:
+                            response["filtros"] = ["Hoja de Control"]
+
+            # unir response y request.form
+            documento = request.form | response
+            doc_id = work.save(documento)
+            response["_id"] = str(doc_id)
 
             sentry_sdk.metrics.incr(
                 key="RoDeV1Count",

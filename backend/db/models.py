@@ -12,7 +12,14 @@ class Work:
         return result.inserted_id
     
     def update(self, data: dict, document_id: str):
-        result = self.collection.update_one({"_id": document_id}, {"$set": data})
+        actual_data = self.collection.find_one({"_id": document_id})
+        actual_data = {k: v for k, v in actual_data.items() if v is not None}
+        actual_data.pop("_id")
+        result = self.collection.update_one(
+            {"_id": document_id},
+            {"$set": {**actual_data, **data}}
+        )
+
         return result.modified_count
     
     def delete(self, document_id: str):
@@ -20,19 +27,6 @@ class Work:
         return result.deleted_count
     
     def get_all(self):
-        return self.collection.find()
+        return self.collection.find({})
     
-    def get_by_id(self, document_id: str):
-        return self.collection.find_one({"_id": document_id})
-    
-    def get_by_archivo(self, archivo: str):
-        return self.collection.find({"archivo": archivo})
-    
-    def get_by_prediccion(self, prediccion: str):
-        return self.collection.find({"prediccion": prediccion})
-    
-    def get_by_query(self, query: dict):
-        return self.collection.find(query)
-    
-    def get_by_query_limit(self, query: dict, limit: int):
-        return self.collection.find(query).limit(limit)
+
