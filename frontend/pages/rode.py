@@ -49,7 +49,11 @@ def process_uploaded_images(uploaded_file, show_image, version="v1"):
 
     errors = []
 
-    with st.spinner("Procesando..."):
+    with st.spinner(f"Procesando {len(uploaded_file)} imágenes..."):
+        # work_id = f"rode_{datetime.now().strftime('%Y%m%d%H%M%S')}_{len(uploaded_file)}"
+        work_id = 'rode_testing'
+
+        st.info(f'Identificador de trabajo: **{work_id}**')
         st.info(f'Procesando **{len(uploaded_file)}** imágenes.')
         st.info(f'Inicio del procesamiento: **{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}**')
         inicio_time = datetime.now()
@@ -57,15 +61,27 @@ def process_uploaded_images(uploaded_file, show_image, version="v1"):
 
         for file in uploaded_file:
             image = file.read()
-            data, response = procces_image_rode(image, file.name, version)
 
-            if "Hoja de Control" in filters:
-                filtered = hoja_control(image)
+            data_file = {
+                "work_id": work_id,
+                "archivo": file.name,
+                "tipo": "image",
+                "filtros": [f for f in filters]
+            }
 
-                if filtered:
-                    st.toast(f'Existe una hoja de control en la imagen **{file.name}**', icon="⚠️")
-                    errors.append(f'Existe una hoja de control en la imagen **{file.name}**')
-                    data["filtros"] = ["hoja de control"]
+            data, response = procces_image_rode(image, file.name, version, data_file)
+
+            # if "Hoja de Control" in filters:
+            #     filtered = hoja_control(image)
+
+                # if filtered:
+                #     st.toast(f'Existe una hoja de control en la imagen **{file.name}**', icon="⚠️")
+                #     errors.append(f'Existe una hoja de control en la imagen **{file.name}**')
+                #     data["filtros"] = ["hoja de control"]
+
+            if "Hoja de Control" in response['filtros']:
+                st.error(f':warning: Existe una hoja de control en la imagen "**{file.name}**"')
+                errors.append(f'Existe una hoja de control en la imagen "**{file.name}**"')
 
             st.caption(file.name)   
 
@@ -89,7 +105,7 @@ def process_uploaded_images(uploaded_file, show_image, version="v1"):
             placeholder.dataframe(dataframe)
             bad_placeholder.dataframe(bad_dataframe)
 
-        fin_process.info(f'Fin del procesamiento: **{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}**, tiempo total (Segundos): **{round((datetime.now() - inicio_time).total_seconds(), 2)}**')
+        fin_process.info(f'Fin del procesamiento: **{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}**, tiempo total (Minutos): **{round((datetime.now() - inicio_time).total_seconds() / 60, 2)}**')
 
 
 def process_pdf_file(uploaded_pdf, show_image, version="v1"):
@@ -143,10 +159,11 @@ def process_pdf_file(uploaded_pdf, show_image, version="v1"):
         fin_process.info(f'Fin del procesamiento: **{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}**, tiempo total: **{(datetime.now() - inicio_time).total_seconds()}** Segundos')
 
 def main():
-    if uploaded_file:
-        process_uploaded_images(uploaded_file, show_image, version)
-    if uploaded_pdf:
-        process_pdf_file(uploaded_pdf, show_image, version)
+    if st.button("Procesar archivos", help="Presiona el botón para procesar los archivos cargados", use_container_width=True):
+        if uploaded_file:
+            process_uploaded_images(uploaded_file, show_image, version)
+        if uploaded_pdf:
+            process_pdf_file(uploaded_pdf, show_image, version)
 
 if __name__ == "__main__":
     main()

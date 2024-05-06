@@ -3,8 +3,8 @@ from datetime import datetime
 import streamlit as st
 import random
 
-def procces_image_rode(image, name, version="v1"):
-    response = ImageProccesing("rode").process_file(image, version)
+def procces_image_rode(image, name, version="v1", data_file: dict = {}):
+    response = ImageProccesing("rode").process_file(image, version, data_file)
 
     # cambiar nombres a español
     response['data'][0]['name'] = "rotado" if response['data'][0]['name'] == "rotated" else "no rotado"
@@ -20,7 +20,7 @@ def procces_image_rode(image, name, version="v1"):
 
     return data, response
 
-def procces_pdf2image_rode(image, name, version="v1", i=0):
+def procces_pdf2image_rode(image, name, version="v1", i=0, data_file: dict = {}):
     name_file_rand = f'temp/{"".join(random.choices("abcdefghijklmnopqrstuvwxyz", k=10))}.jpg'
     image.save(name_file_rand)
     image_path = name_file_rand
