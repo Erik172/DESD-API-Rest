@@ -6,7 +6,6 @@ import os
 
 from resources import (
     single_model_metrics,
-    hoja_control,
     procces_image_rode,
     procces_pdf2image_rode
 )

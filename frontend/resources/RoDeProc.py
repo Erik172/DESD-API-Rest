@@ -41,12 +41,10 @@ def procces_pdf2image_rode(image, name, version="v1", i=0, data_file: dict = {})
     image_path = name_file_rand
 
     with open(image_path, "rb") as image:
-        response = ImageProccesing("rode").process_file(image, version)
+        response = ImageProccesing("rode").process_file(image, version, data_file)
 
     #change names to spanish
     response['data'][0]['name'] = "rotado" if response['data'][0]['name'] == "rotated" else "no rotado"
-
-    st.caption(f"Pagina {i + 1} del PDF {name}")
 
     data = {
         "archivo": [name],

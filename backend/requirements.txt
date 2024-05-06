@@ -6,3 +6,4 @@ torch
 ultralytics>=8.1.45
 sentry-sdk
 pymongo
+pytesseract

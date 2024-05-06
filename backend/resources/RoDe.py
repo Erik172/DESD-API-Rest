@@ -48,10 +48,15 @@ class RoDeV1(Resource):
                         if "filtros" in response:
                             response["filtros"].append("hoja de control")
                         else:
-                            response["filtros"] = ["Hoja de Control"]
+                            response["filtros"] = ["hoja de control"]
 
+            r_form = request.form.to_dict()
+            r_form.pop("filtros")
             # unir response y request.form
-            documento = request.form | response
+            documento = r_form | response
+            documento['prediccion'] = response['data'][0]['name']
+            documento['confianza'] = response['data'][0]['confidence']
+            documento.pop("data")
             doc_id = work.save(documento)
             response["_id"] = str(doc_id)
 
@@ -61,5 +66,4 @@ class RoDeV1(Resource):
             )
 
             os.remove(file_name)
-
             return jsonify(response)

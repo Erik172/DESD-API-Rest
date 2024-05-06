@@ -24,7 +24,6 @@ sentry_sdk.init(
 basedir = os.path.abspath(os.path.dirname(__file__))
 
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] ='sqlite:///' + os.path.join(basedir, 'database.db')
 api = Api(app)
 
 api.add_resource(Works, "/works")

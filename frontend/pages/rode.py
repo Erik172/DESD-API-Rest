@@ -6,7 +6,6 @@ import os
 
 from resources import (
     single_model_metrics, 
-    hoja_control,
     procces_image_rode,
     procces_pdf2image_rode
 )
@@ -19,6 +18,9 @@ st.set_page_config(
 )
 
 st.title("RoDe (Rotation Detection) Detección de rotación 🔄")
+
+work_id_default = f"rode_{datetime.now().strftime('%Y%m%d%H%M%S')}"
+work_id = st.text_input("Identificador de trabajo", placeholder=f"Identificador de trabajo (Opcional)")
 
 version = "v1"
 
@@ -46,12 +48,13 @@ bad_dataframe = pd.DataFrame(columns=["archivo", "predicción", "confianza", "ti
 def process_uploaded_images(uploaded_file, show_image, version="v1"):
     global bad_dataframe
     global dataframe
+    global work_id, work_id_default
 
     errors = []
 
     with st.spinner(f"Procesando {len(uploaded_file)} imágenes..."):
-        # work_id = f"rode_{datetime.now().strftime('%Y%m%d%H%M%S')}_{len(uploaded_file)}"
-        work_id = 'rode_testing'
+        if not work_id:
+            work_id = work_id_default
 
         st.info(f'Identificador de trabajo: **{work_id}**')
         st.info(f'Procesando **{len(uploaded_file)}** imágenes.')
@@ -71,17 +74,13 @@ def process_uploaded_images(uploaded_file, show_image, version="v1"):
 
             data, response = procces_image_rode(image, file.name, version, data_file)
 
-            # if "Hoja de Control" in filters:
-            #     filtered = hoja_control(image)
+            if "filtros" not in response:
+                response["filtros"] = False
 
-                # if filtered:
-                #     st.toast(f'Existe una hoja de control en la imagen **{file.name}**', icon="⚠️")
-                #     errors.append(f'Existe una hoja de control en la imagen **{file.name}**')
-                #     data["filtros"] = ["hoja de control"]
-
-            if "Hoja de Control" in response['filtros']:
+            if "hoja de control" in response['filtros']:
                 st.error(f':warning: Existe una hoja de control en la imagen "**{file.name}**"')
                 errors.append(f'Existe una hoja de control en la imagen "**{file.name}**"')
+                data["filtros"] = ["hoja de control"]
 
             st.caption(file.name)   
 
@@ -109,38 +108,70 @@ def process_uploaded_images(uploaded_file, show_image, version="v1"):
 
 
 def process_pdf_file(uploaded_pdf, show_image, version="v1"):
+    global work_id, work_id_default
     global bad_dataframe
     global dataframe
 
     errors = []
 
     with st.spinner(f"Procesando {len(uploaded_pdf)} PDFs..."):
+        if not work_id:
+            work_id = work_id_default
+
+        st.info(f'Identificador de trabajo: **{work_id}**')
         st.info(f'Procesando **{len(uploaded_pdf)}** PDFs.')
         st.info(f'Inicio del procesamiento: **{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}**')
         inicio_time = datetime.now()
         fin_process = st.empty()
 
+        if len(uploaded_pdf) > 3:
+            st.warning(f":warning: solo se mostrarán los resultados con problemas, para ver todos los resultados puede ir a la pagina de **trabajos** y seleccionar el trabajo: **{work_id}**")
+
+        st.divider()
+
         for pdf in uploaded_pdf:
             images = convert_from_bytes(pdf.read())
             for i, image in enumerate(images):
-                data, response, image_path, name_file_rand = procces_pdf2image_rode(image, pdf.name, version, i)
+
+                data_file = {
+                    "work_id": work_id,
+                    "archivo": pdf.name,
+                    "tipo": "pdf",
+                    "pagina": i + 1,
+                    "filtros": [f for f in filters]
+                }
+
+                data, response, image_path, name_file_rand = procces_pdf2image_rode(image, pdf.name, version, i, data_file)
                 
-                if "Hoja de Control" in filters:
-                    filtered = hoja_control(image_path)
-                    if filtered:
-                        st.error(f':warning: Existe una hoja de control en la página **{i + 1}** del PDF **{pdf.name}**')
-                        errors.append(f'Existe una hoja de control en la página **{i + 1}** del PDF **{pdf.name}**')
+                if "filtros" in response:
+                    if "hoja de control" in response['filtros']:
+                        st.error(f':warning: Existe una hoja de control en la página **{i + 1}** del PDF "**{pdf.name}**"')
+                        errors.append(f'Existe una hoja de control en la página **{i + 1}** del PDF "**{pdf.name}**"')
                         data["filtros"] = ["hoja de control"]
 
                 if version == "v1":
-                    single_model_metrics(response)
-                    dataframe = pd.concat([dataframe, pd.DataFrame(data)], axis=0, ignore_index=True)
+                    if len(uploaded_pdf) < 3:
+                        st.caption(f"Pagina {i + 1} del PDF {pdf.name}")
+                        single_model_metrics(response)
+                        dataframe = pd.concat([dataframe, pd.DataFrame(data)], axis=0, ignore_index=True)
+                        placeholder.dataframe(dataframe)
 
-                    if response['data'][0]['name'] == "rotado":
+
+                    if response['data'][0]['name'] == "rotado" or data.get("filtros"):
+                        if len(uploaded_pdf) >= 3:
+                            st.caption(f"Pagina {i + 1} del PDF {pdf.name}")
+                            single_model_metrics(response)
+
                         bad_dataframe = pd.concat([bad_dataframe, pd.DataFrame(data)], axis=0, ignore_index=True)
-                        st.error(f':warning: La Página **{i + 1}** en el PDF está rotada.')
+                        bad_placeholder.dataframe(bad_dataframe)
 
-                if show_image:
+                        if response['data'][0]['name'] == "rotado":
+                            st.error(f':warning: La Página **{i + 1}** en el PDF está rotada.')
+
+                            if show_image and len(uploaded_pdf) >= 3:
+                                st.image(image_path, use_column_width=True, caption="Uploaded Image", output_format="JPEG")
+
+                if show_image and len(uploaded_pdf) < 3:
                     st.image(image_path, use_column_width=True, caption="Uploaded Image", output_format="JPEG")
 
                 if errors:
@@ -150,11 +181,6 @@ def process_pdf_file(uploaded_pdf, show_image, version="v1"):
                     os.remove(name_file_rand)
                 except PermissionError:
                     print(f"Error al eliminar el archivo {image_path}")
-
-                st.divider()
-
-                placeholder.dataframe(dataframe)
-                bad_placeholder.dataframe(bad_dataframe)
 
         fin_process.info(f'Fin del procesamiento: **{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}**, tiempo total: **{(datetime.now() - inicio_time).total_seconds()}** Segundos')
 
