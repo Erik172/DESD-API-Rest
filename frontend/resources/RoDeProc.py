@@ -4,6 +4,21 @@ import streamlit as st
 import random
 
 def procces_image_rode(image, name, version="v1", data_file: dict = {}):
+    """
+    Process the given image using the RoDe algorithm.
+
+    Args:
+        image: The image to be processed.
+        name: The name of the image file.
+        version: The version of the RoDe algorithm to use (default is "v1").
+        data_file: Additional data file to be used during processing (default is an empty dictionary).
+
+    Returns:
+        A tuple containing the processed data and the response from the image processing.
+
+    Example usage:
+        data, response = procces_image_rode(image, "example.jpg", version="v2", data_file={"param": "value"})
+    """
     response = ImageProccesing("rode").process_file(image, version, data_file)
 
     # cambiar nombres a español
