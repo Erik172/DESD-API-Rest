@@ -4,8 +4,7 @@ import pandas as pd
 import requests
 import os
 
-from resources import (
-    single_model_metrics,
+from src import (
     procces_image_rode,
     procces_pdf2image_rode
 )

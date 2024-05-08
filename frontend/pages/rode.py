@@ -4,8 +4,9 @@ import streamlit as st
 import pandas as pd
 import os
 
-from resources import (
-    single_model_metrics, 
+from components import single_model_metrics
+
+from src import (
     procces_image_rode,
     procces_pdf2image_rode
 )
@@ -56,14 +57,18 @@ def process_uploaded_images(uploaded_file, show_image, version="v1"):
         if not work_id:
             work_id = work_id_default
 
+        bar_progress = st.progress(0, text="Procesando...")
+
         st.info(f'Identificador de trabajo: **{work_id}**')
         st.info(f'Procesando **{len(uploaded_file)}** imágenes.')
         st.info(f'Inicio del procesamiento: **{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}**')
         inicio_time = datetime.now()
         fin_process = st.empty()
-
+        i = 0.0
         for file in uploaded_file:
             image = file.read()
+            bar_progress.progress(i / len(uploaded_file), text=f"Procesando {file.name}...")
+            i += 1
 
             data_file = {
                 "work_id": work_id,
@@ -74,13 +79,11 @@ def process_uploaded_images(uploaded_file, show_image, version="v1"):
 
             data, response = procces_image_rode(image, file.name, version, data_file)
 
-            if "filtros" not in response:
-                response["filtros"] = False
-
-            if "hoja de control" in response['filtros']:
-                st.error(f':warning: Existe una hoja de control en la imagen "**{file.name}**"')
-                errors.append(f'Existe una hoja de control en la imagen "**{file.name}**"')
-                data["filtros"] = ["hoja de control"]
+            if "filtros" in response:
+                if "hoja de control" in response['filtros']:
+                    st.error(f':warning: Existe una hoja de control en la imagen "**{file.name}**"')
+                    errors.append(f'Existe una hoja de control en la imagen "**{file.name}**"')
+                    data["filtros"] = ["hoja de control"]
 
             st.caption(file.name)   
 
@@ -104,6 +107,7 @@ def process_uploaded_images(uploaded_file, show_image, version="v1"):
             placeholder.dataframe(dataframe)
             bad_placeholder.dataframe(bad_dataframe)
 
+        bar_progress.progress(1.0, text="Fin del procesamiento")
         fin_process.info(f'Fin del procesamiento: **{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}**, tiempo total (Minutos): **{round((datetime.now() - inicio_time).total_seconds() / 60, 2)}**')
 
 
@@ -118,6 +122,10 @@ def process_pdf_file(uploaded_pdf, show_image, version="v1"):
         if not work_id:
             work_id = work_id_default
 
+        count, pages_count = 0, 0
+        bar_progress = st.progress(0, text="Procesando...")
+        pages_progress = st.progress(0, text="Procesando las páginas...")
+
         st.info(f'Identificador de trabajo: **{work_id}**')
         st.info(f'Procesando **{len(uploaded_pdf)}** PDFs.')
         st.info(f'Inicio del procesamiento: **{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}**')
@@ -131,8 +139,11 @@ def process_pdf_file(uploaded_pdf, show_image, version="v1"):
 
         for pdf in uploaded_pdf:
             images = convert_from_bytes(pdf.read())
+            bar_progress.progress(count / len(uploaded_pdf), text=f"Procesando {pdf.name}...")
+            count += 1
             for i, image in enumerate(images):
-
+                pages_progress.progress(pages_count / len(images), text=f"Procesando página {i + 1} de {pdf.name}...")
+                pages_count += 1
                 data_file = {
                     "work_id": work_id,
                     "archivo": pdf.name,
@@ -182,7 +193,13 @@ def process_pdf_file(uploaded_pdf, show_image, version="v1"):
                 except PermissionError:
                     print(f"Error al eliminar el archivo {image_path}")
 
-        fin_process.info(f'Fin del procesamiento: **{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}**, tiempo total: **{(datetime.now() - inicio_time).total_seconds()}** Segundos')
+                st.divider()
+
+            pages_progress.progress(1.0, text="Fin del procesamiento")
+            pages_count = 0
+
+        bar_progress.progress(1.0, text="Fin del procesamiento")
+        fin_process.info(f'Fin del procesamiento: **{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}**, tiempo total (Minutos): **{round((datetime.now() - inicio_time).total_seconds() / 60, 2)}')
 
 def main():
     if st.button("Procesar archivos", help="Presiona el botón para procesar los archivos cargados", use_container_width=True):

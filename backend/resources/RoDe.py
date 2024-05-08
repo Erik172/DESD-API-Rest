@@ -18,7 +18,7 @@ class RoDeV1(Resource):
     def post(self):
         with sentry_sdk.metrics.timing(key="RoDeV1", tags={"model": "RoDeV1"}):
             start_time = datetime.now()
-            model_path = 'models/rode_v2.pt'
+            model_path = 'models/rode_v2.5.pt'
             
             model = YOLO(model_path, verbose=True)
 

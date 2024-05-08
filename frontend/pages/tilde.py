@@ -5,7 +5,7 @@ import pandas as pd
 import random
 import os
 
-from resources import (
+from src import (
     ImageProccesing, 
     single_model_metrics, 
     hoja_control

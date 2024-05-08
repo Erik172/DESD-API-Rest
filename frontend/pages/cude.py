@@ -5,10 +5,10 @@ import pandas as pd
 import random
 import os
 
-from resources import (
+from components import single_model_metrics
+
+from src import (
     ImageProccesing, 
-    single_model_metrics, 
-    hoja_control
 )
 
 st.set_page_config(
