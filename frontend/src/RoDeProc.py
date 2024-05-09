@@ -1,6 +1,5 @@
 from .process_files import ImageProccesing
 from datetime import datetime
-import streamlit as st
 import random
 
 def procces_image_rode(image, name, version="v1", data_file: dict = {}):
