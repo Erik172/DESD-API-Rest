@@ -9,7 +9,7 @@ from ultralytics import YOLO
 from datetime import datetime
 
 from src import parse_result_yolov8, data_file_validation
-from src.filters import hoja_control
+from src.filters import apply_filters
 
 from db import Work
 
@@ -39,16 +39,9 @@ class RoDeV1(Resource):
             response = model(file_name)
             response = parse_result_yolov8(response[0])
             response['time'] = (datetime.now() - start_time).total_seconds()
-            response['model'] = "RoDeV1"
+            response['model'] = "RoDeV2.5"
 
-            if "filtros" in request.form:
-                filtros = request.form["filtros"].split(",")
-                if "Hoja de Control" in filtros:
-                    if hoja_control(file_name):
-                        if "filtros" in response:
-                            response["filtros"].append("hoja de control")
-                        else:
-                            response["filtros"] = ["hoja de control"]
+            response = apply_filters(file_name=file_name, requests=request.form, response=response)
 
             r_form = request.form.to_dict()
             r_form.pop("filtros")
@@ -62,7 +55,7 @@ class RoDeV1(Resource):
 
             sentry_sdk.metrics.incr(
                 key="RoDeV1Count",
-                tags={"model": "RoDeV1"}
+                tags={"model": "RoDeV2.5"}
             )
 
             os.remove(file_name)
