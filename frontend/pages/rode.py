@@ -182,6 +182,8 @@ def process_pdf_file(uploaded_pdf, show_image, version="v1"):
                             if show_image and len(uploaded_pdf) >= 3:
                                 st.image(image_path, use_column_width=True, caption="Uploaded Image", output_format="JPEG")
 
+                            st.divider()
+
                 if show_image and len(uploaded_pdf) < 3:
                     st.image(image_path, use_column_width=True, caption="Uploaded Image", output_format="JPEG")
 
@@ -192,8 +194,6 @@ def process_pdf_file(uploaded_pdf, show_image, version="v1"):
                     os.remove(name_file_rand)
                 except PermissionError:
                     print(f"Error al eliminar el archivo {image_path}")
-
-                st.divider()
 
             pages_progress.progress(1.0, text="Fin del procesamiento")
             pages_count = 0
