@@ -29,4 +29,19 @@ class Work:
     def get_all(self):
         return self.collection.find({})
     
+    def all_documents_to_csv(self):
+        data = self.get_all()
+        data = list(data)
+        if not data:
+            return None
+        keys = data[0].keys()
+        with open(f"exports/{self.work_id}.csv", "w") as f:
+            f.write(",".join(keys) + "\n")
+            for document in data:
+                f.write(",".join([str(document[key]) for key in keys]) + "\n")
+        return f"{self.work_id}.csv"
+    
+    def count(self):
+        return self.collection.count_documents({})
+    
 

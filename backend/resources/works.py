@@ -10,6 +10,10 @@ class Works(Resource):
     def get(self):
         return jsonify(self.db.list_collection_names())
     
+    def delete(self, collection_name):
+        self.db.drop_collection(collection_name)
+        return jsonify({"status": "ok"})
+    
 class WorkEndPoint(Resource):
     def get(self, work_id):
         work = Work(work_id)
@@ -32,3 +36,16 @@ class WorkEndPoint(Resource):
         work = Work(work_id)
         result = work.delete(document_id)
         return jsonify({"deleted_count": result})
+    
+class WorkExport(Resource):
+    def get(self, work_id):
+        work = Work(work_id)
+        file_name = work.all_documents_to_csv()
+        data = {
+            "file_name": file_name,
+            "work_id": work_id,
+            "total": work.count(),
+            "url": f"/descargar/{work_id}"
+        }
+
+        return jsonify(data)
