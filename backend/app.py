@@ -1,4 +1,4 @@
-from flask import Flask, send_file, request
+from flask import Flask, send_file
 from flask_restful import Api
 import sentry_sdk
 import os
@@ -7,6 +7,7 @@ from resources import (
     TilDeV1,
     RoDeV1,
     CuDeV1,
+    DuDeV1,
     Audit
 )
 
@@ -35,6 +36,7 @@ api.add_resource(Work, "/work/<string:work_id>", "/work/<string:work_id>/<string
 api.add_resource(TilDeV1, "/tilde/v1")
 api.add_resource(RoDeV1, "/rode/v1")
 api.add_resource(CuDeV1, "/cude/v1")
+api.add_resource(DuDeV1, "/dude/v1/<string:dir_name>")
 
 api.add_resource(Audit, "/audit")
 
