@@ -21,7 +21,7 @@ st.error(":warning: **¡Atención!** Esta pagina esta en desarrollo y puede no f
 
 models = st.multiselect(
     "Selecciona los modelos a utilizar",
-    ["TilDe", "RoDe", "CuDe"],
+    ["TilDe", "RoDe", "CuDe", "DuDe"],
     ["RoDe"]
 )
 
@@ -37,7 +37,26 @@ uploaded_file = st.file_uploader("Subir Imagenes", type=["jpg", "jpeg", "png", "
 uploaded_pdf = st.file_uploader("Subir Archivos PDF", type=["pdf"], accept_multiple_files=True)
 
 def process_images(upload_files):
-    pass
+    st.write(len(upload_files))
+    if len(upload_files) == 0:
+        st.warning("Debes subir al menos un archivo", icon="⚠️")
+        
+    if not models and not filters:
+        st.warning("Debes seleccionar al menos un modelo o filtro", icon="⚠️")
+
+    for file in upload_files:
+        image = file.read()
+        
+        if "TilDe" in models:
+            pass
+        if "RoDe" in models:
+            data, response = procces_image_rode(image, file.name)
+            st.write(data)
+            st.write(response)
+        if "CuDe" in models:
+            pass
+        if "DuDe" in models:
+            pass
 
 def process_pdfs(upload_files):
     pass

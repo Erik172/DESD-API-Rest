@@ -10,13 +10,14 @@ def data_file_validation(request):
 
     """
     if request.method == "POST":
-        if "work_id" not in request.form:
-            request.form["work_id"] = "rode_test"
+        form_data = request.form.to_dict()  # Create a mutable copy of request.form
+        if "work_id" not in form_data:
+            form_data["work_id"] = "rode_test"
 
-        if "archivo" not in request.form:
-            request.form["archivo"] = "no_name"
+        if "archivo" not in form_data:
+            form_data["archivo"] = "no_name"
 
-        if "tipo" not in request.form:
-            request.form["tipo"] = "image"
+        if "tipo" not in form_data:
+            form_data["tipo"] = "image"
 
-        return request.form
+        return form_data

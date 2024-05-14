@@ -5,10 +5,10 @@ import pandas as pd
 import random
 import os
 
+from components import single_model_metrics
+
 from src import (
-    ImageProccesing, 
-    single_model_metrics, 
-    hoja_control
+    ImageProccesing
 )
 
 st.set_page_config(
@@ -17,6 +17,8 @@ st.set_page_config(
     layout="centered",
     initial_sidebar_state="auto"
 )
+
+st.warning("En Desarrollo ⚠️")
 
 st.title("TilDe (Tilted Detection) Detección de inclinación 📐")
 
@@ -53,7 +55,6 @@ def process_uploaded_images(uploaded_file, show_image, version="v1"):
         
         for file in uploaded_file:
             image = file.read()
-            filtered = hoja_control(image)
             response = ImageProccesing("tilde").process_file(image, version)
 
             # cambiar nombres a español
@@ -67,11 +68,6 @@ def process_uploaded_images(uploaded_file, show_image, version="v1"):
                     "tiempo(s)": [response['time']],
                     "fecha": [datetime.now().strftime("%Y-%m-%d %H:%M:%S")]
             }
-
-            if filtered:
-                st.toast(f'Existe una hoja de control en la imagen **{file.name}**', icon="⚠️")
-                errors.append(f'Existe una hoja de control en la imagen **{file.name}**')
-                data["filtros"] = ["hoja de control"]
 
             st.caption(file.name)   
 
@@ -110,7 +106,6 @@ def process_pdf_file(uploaded_file, show_image, version="v1"):
                 image.save(name_file_rand)
                 image_path = name_file_rand
 
-                filtered = hoja_control(image)
                 with open(image_path, "rb") as image:
                     response = ImageProccesing("tilde").process_file(image, version)
 
@@ -127,10 +122,6 @@ def process_pdf_file(uploaded_file, show_image, version="v1"):
                     "fecha": [datetime.now().strftime("%Y-%m-%d %H:%M:%S")]
                 }
 
-                if filtered:
-                    st.toast(f'Existe una hoja de control en la pagina **{i + 1}** del PDF **{pdf.name}**', icon="⚠️")
-                    errors.append(f'Existe una hoja de control en la pagina **{i + 1}** del PDF **{pdf.name}**')
-                    data["filtros"] = ["hoja de control"]
 
                 st.caption(f"Página {i + 1} del PDF {pdf.name}")
 

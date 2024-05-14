@@ -10,7 +10,7 @@ class ImageProccesing(Proccesing):
     def __init__(self, model):
         self.model = model
         
-    def process_file(self, file, version, data: dict):
+    def process_file(self, file, version, data: dict = {}):
         """
         Process a file using the specified model and version.
 

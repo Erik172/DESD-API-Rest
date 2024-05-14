@@ -18,6 +18,8 @@ st.set_page_config(
     initial_sidebar_state="auto"
 )
 
+st.info("En ReEntrenamiento y Revision, no usar ⚠️")
+
 st.title("CuDe (Cut Detection) Detección de cortes ✂️")
 
 work_id = st.text_input("Identificador de trabajo", placeholder=f"Identificador de trabajo (Opcional)")

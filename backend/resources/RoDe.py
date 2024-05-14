@@ -43,10 +43,10 @@ class RoDeV1(Resource):
 
             response = apply_filters(file_name=file_name, requests=request.form, response=response)
 
-            r_form = request.form.to_dict()
-            r_form.pop("filtros")
+            if request.form.get("filtros"):
+                request.form.pop("filtros")
             # unir response y request.form
-            documento = r_form | response
+            documento = request.form | response
             documento['prediccion'] = response['data'][0]['name']
             documento['confianza'] = response['data'][0]['confidence']
             documento.pop("data")

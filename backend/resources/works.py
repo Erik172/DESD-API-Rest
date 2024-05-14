@@ -3,6 +3,7 @@ from flask_restful import Resource
 from datetime import datetime
 from db import Work
 from database import get_database
+import os
 
 class Works(Resource):
     db = get_database()
@@ -49,3 +50,7 @@ class WorkExport(Resource):
         }
 
         return jsonify(data)
+    
+    def delete(self, work_id):
+        os.remove(f"{work_id}.csv")
+        return jsonify({"status": "ok"})
