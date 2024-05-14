@@ -1,6 +1,7 @@
 from PIL import Image
 from flask import request
 from flask_restful import Resource
+from datetime import datetime
 import pytesseract
 import os
 
@@ -46,13 +47,23 @@ class DuDeV1(Resource):
         return {"message": f"Archivo {file.filename} guardado exitosamente."}
     
     def get(self, dir_name: str):
+        start_time = datetime.now()
         dude = DuDe(f'temp/{dir_name}')
         dude.find_duplicates()
-        return dude.get_duplicates()
+        return  {
+            "duplicates": dude.get_duplicates(),
+            # "hash_map": dude.get_hash_map(),
+            "time(s)": f"{(datetime.now() - start_time).total_seconds()}"
+        }
     
     def delete(self, dir_name: str):
         if os.path.exists(f'temp/{dir_name}'):
-            os.remove(f'temp/{dir_name}')
+            try:
+                for file in os.listdir(f'temp/{dir_name}'):
+                    os.remove(f'temp/{dir_name}/{file}')
+                os.rmdir(f'temp/{dir_name}')
+            except Exception as e:
+                return {"message": f"Error al eliminar archivos: {e}"}
 
             return {"message": "Archivos eliminados exitosamente."}
 
