@@ -7,9 +7,9 @@ import random
 from src import parse_result_yolov8
 
 models = {
-    "tilde_v1": "models/tilde_v1.pt",
-    "rode_v1": "models/rode_v1.pt",
-    "cude_v1": "models/cude_v1.pt"
+    "tilde": "models/tilde_v1.pt",
+    "rode": "models/rode_v1.pt",
+    "cude": "models/cude_v1.pt"
 }
 
 class Audit(Resource):

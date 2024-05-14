@@ -5,7 +5,7 @@ from datetime import datetime
 import pytesseract
 import os
 
-class DuDe:
+class DuDeBase:
     def __init__(self, data_dir):
         self.hash_map = {}
         self.duplicates = {}
@@ -43,7 +43,7 @@ class DuDe:
     def get_hash_map(self) -> dict:
             return self.hash_map
     
-class DuDeV1(Resource):
+class DuDe(Resource):
     def post(self, dir_name: str):
         file = request.files['file']
         if not os.path.exists(f'temp/{dir_name}'):
@@ -54,7 +54,7 @@ class DuDeV1(Resource):
     
     def get(self, dir_name: str):
         start_time = datetime.now()
-        dude = DuDe(f'temp/{dir_name}')
+        dude = DuDeBase(f'temp/{dir_name}')
         dude.find_duplicates()
         return  {
             "duplicates": dude.get_duplicates(),

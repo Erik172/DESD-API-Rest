@@ -4,10 +4,10 @@ import sentry_sdk
 import os
 
 from resources import (
-    TilDeV1,
-    RoDeV1,
-    CuDeV1,
-    DuDeV1,
+    TilDe,
+    RoDe,
+    CuDe,
+    DuDe,
     Audit
 )
 
@@ -33,10 +33,10 @@ api.add_resource(Works, "/works", "/works/<string:collection_name>")
 api.add_resource(WorkExport, "/work/<string:work_id>/export")
 api.add_resource(Work, "/work/<string:work_id>", "/work/<string:work_id>/<string:document_id>")
 
-api.add_resource(TilDeV1, "/tilde/v1")
-api.add_resource(RoDeV1, "/rode/v1")
-api.add_resource(CuDeV1, "/cude/v1")
-api.add_resource(DuDeV1, "/dude/v1/<string:dir_name>")
+api.add_resource(TilDe, "/tilde")
+api.add_resource(RoDe, "/rode")
+api.add_resource(CuDe, "/cude")
+api.add_resource(DuDe, "/dude/<string:dir_name>")
 
 api.add_resource(Audit, "/audit")
 
@@ -46,4 +46,4 @@ def download(file_name):
     return send_file(route, as_attachment=True, mimetype='csv')
 
 if __name__ == "__main__":
-    app.run(debug=False, host="0.0.0.0", port=5000)
+    app.run(debug=True, host="0.0.0.0", port=5000)

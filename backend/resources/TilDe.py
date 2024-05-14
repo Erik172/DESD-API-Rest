@@ -8,11 +8,11 @@ import sentry_sdk.metrics
 from ultralytics import YOLO
 from datetime import datetime
 
-from src import parse_result_yolov8, data_file_validation
+from src import parse_result_yolov8
 from src.filters import apply_filters
 from db import Work
 
-class TilDeV1(Resource):
+class TilDe(Resource):
     def post(self):
         with sentry_sdk.metrics.timing(key="TilDeV1", tags={"model": "TilDeV1"}):
             start_time = datetime.now()
@@ -21,17 +21,17 @@ class TilDeV1(Resource):
             model = YOLO(model_path, verbose=True)
 
             if "image" not in request.files:
-                return {"error": "No file uploaded"}
+                return {"error": "No image found in request"}, 400
             
-            request.form = data_file_validation(request)
+            request.form = request.form.to_dict()
+
+            if not request.form.get("work_id"):
+                request.form["work_id"] = "tilde_test"
+
             work = Work(request.form["work_id"])
             
-            image = request.files["image"]
-            image = image.read()
-            image = base64.b64encode(image)
             file_name = f'temp/{"".join(random.choices("abcdefghijklmnopqrstuvwxyz", k=10))}.jpg'
-            with open(file_name, 'wb') as f:
-                f.write(base64.b64decode(image))
+            request.files["image"].save(file_name)
 
             response = model(file_name)
             response = parse_result_yolov8(response[0])

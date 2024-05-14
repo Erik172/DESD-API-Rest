@@ -1,6 +1,6 @@
 from .works import Works, WorkEndPoint, WorkExport
-from .TilDe import TilDeV1
-from .RoDe import RoDeV1
-from .CuDe import CuDeV1
-from .DuDe import DuDeV1
+from .TilDe import TilDe
+from .RoDe import RoDe
+from .CuDe import CuDe
+from .DuDe import DuDe
 from .audit import Audit
