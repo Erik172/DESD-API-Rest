@@ -1,14 +1,15 @@
 from pdf2image import convert_from_bytes
 from datetime import datetime
+from io import BytesIO
 import streamlit as st
 import pandas as pd
-import os
 
 from components import single_model_metrics
 
 from src import (
     procces_image_rode,
-    procces_pdf2image_rode
+    procces_pdf2image_rode,
+    UploadFile2dict
 )
 
 st.set_page_config(
@@ -20,10 +21,10 @@ st.set_page_config(
 
 st.title("RoDe (Rotation Detection) Detección de rotación 🔄")
 
+st.success("Version estable para uso en producción", icon="🚀")
+
 work_id_default = f"rode_{datetime.now().strftime('%Y%m%d%H%M%S')}"
 work_id = st.text_input("Identificador de trabajo", placeholder=f"Identificador de trabajo (Opcional)")
-
-version = "v1"
 
 filters = st.multiselect(
     "Selecciona los filtros a utilizar",
@@ -46,7 +47,7 @@ alerts = st.empty()
 dataframe = pd.DataFrame(columns=["archivo", "predicción", "confianza", "tiempo(s)"])
 bad_dataframe = pd.DataFrame(columns=["archivo", "predicción", "confianza", "tiempo(s)"])
 
-def process_uploaded_images(uploaded_file, show_image, version="v1"):
+def process_uploaded_images(uploaded_file, show_image):
     global bad_dataframe
     global dataframe
     global work_id, work_id_default
@@ -64,40 +65,38 @@ def process_uploaded_images(uploaded_file, show_image, version="v1"):
         st.info(f'Inicio del procesamiento: **{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}**')
         inicio_time = datetime.now()
         fin_process = st.empty()
+
         i = 0.0
+
         for file in uploaded_file:
-            image = file.read()
-            bar_progress.progress(i / len(uploaded_file), text=f"Procesando {file.name}...")
+            file = UploadFile2dict(file)
+            bar_progress.progress(i / len(uploaded_file), text=f"Procesando {file.get('name')}...")
             i += 1
 
-            data_file = {
-                "work_id": work_id,
-                "archivo": file.name,
-                "tipo": "image",
-                "filtros": [f for f in filters]
-            }
+            file["work_id"] = work_id
+            file["filtros"] = [f for f in filters]
+            file["filtros"] = ",".join(file["filtros"])
 
-            data, response = procces_image_rode(image, file.name, version, data_file)
+            data, response = procces_image_rode(file)
 
             if "filtros" in response:
                 if "hoja de control" in response['filtros']:
-                    st.error(f':warning: Existe una hoja de control en la imagen "**{file.name}**"')
-                    errors.append(f'Existe una hoja de control en la imagen "**{file.name}**"')
+                    st.error(f':warning: Existe una hoja de control en la imagen "**{file.get("name")}**"')
+                    errors.append(f'Existe una hoja de control en la imagen "**{file.get("name")}**"')
                     data["filtros"] = ["hoja de control"]
 
-            st.caption(file.name)   
+            st.caption(file.get("name"))   
 
-            if version == "v1":
-                single_model_metrics(response)
+            single_model_metrics(response)
 
-                dataframe = pd.concat([dataframe, pd.DataFrame(data)], axis=0, ignore_index=True)
+            dataframe = pd.concat([dataframe, pd.DataFrame(data)], axis=0, ignore_index=True)
 
-                if response['data'][0]['name'] == "rotado":
-                    bad_dataframe = pd.concat([bad_dataframe, pd.DataFrame(data)], axis=0, ignore_index=True)
-                    st.error(f':warning: La imagen "**{file.name}**" está rotada.')
+            if response['data'][0]['name'] == "rotado":
+                bad_dataframe = pd.concat([bad_dataframe, pd.DataFrame(data)], axis=0, ignore_index=True)
+                st.error(f':warning: La imagen "**{file.get("name")}**" está rotada.')
 
             if show_image:
-                st.image(image, use_column_width=True, caption="Uploaded Image")
+                st.image(file.get("data"), use_column_width=True, caption=f"Uploaded Image {file.get('name')}", output_format="JPEG")
 
             if errors:
                 alerts.error(f':warning: {", ".join(errors)}')
@@ -111,7 +110,7 @@ def process_uploaded_images(uploaded_file, show_image, version="v1"):
         fin_process.info(f'Fin del procesamiento: **{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}**, tiempo total (Minutos): **{round((datetime.now() - inicio_time).total_seconds() / 60, 2)}**')
 
 
-def process_pdf_file(uploaded_pdf, show_image, version="v1"):
+def process_pdf_file(uploaded_pdf, show_image):
     global work_id, work_id_default
     global bad_dataframe
     global dataframe
@@ -129,71 +128,73 @@ def process_pdf_file(uploaded_pdf, show_image, version="v1"):
         st.info(f'Identificador de trabajo: **{work_id}**')
         st.info(f'Procesando **{len(uploaded_pdf)}** PDFs.')
         st.info(f'Inicio del procesamiento: **{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}**')
+
         inicio_time = datetime.now()
         fin_process = st.empty()
 
-        if len(uploaded_pdf) > 3:
+        if len(uploaded_pdf) >= 3:
             st.warning(f":warning: solo se mostrarán los resultados con problemas, para ver todos los resultados puede ir a la pagina de **trabajos** y seleccionar el trabajo: **{work_id}**")
 
         st.divider()
 
         for pdf in uploaded_pdf:
-            images = convert_from_bytes(pdf.read())
-            bar_progress.progress(count / len(uploaded_pdf), text=f"Procesando {pdf.name}...")
-            count += 1
-            for i, image in enumerate(images):
-                pages_progress.progress(pages_count / len(images), text=f"Procesando página {i + 1} de {pdf.name}...")
-                pages_count += 1
-                data_file = {
-                    "work_id": work_id,
-                    "archivo": pdf.name,
-                    "tipo": "pdf",
-                    "pagina": i + 1,
-                    "filtros": [f for f in filters]
-                }
+            pdf = UploadFile2dict(pdf)
+            pdf['work_id'] = work_id
+            pdf['filtros'] = [f for f in filters]
+            pdf['filtros'] = ",".join(pdf['filtros'])
 
-                data, response, image_path, name_file_rand = procces_pdf2image_rode(image, pdf.name, version, i, data_file)
+            images = convert_from_bytes(pdf.get("data").read())
+            pdf['page_total'] = len(images)
+
+            bar_progress.progress(count / len(uploaded_pdf), text=f"Procesando {pdf.get('name')}...")
+            count += 1
+
+            for i, image in enumerate(images):
+                pdf['page'] = i + 1
+                pages_progress.progress(pages_count / len(images), text=f"Procesando página {pdf.get('page')}/{pdf.get('page_total')} del PDF {pdf.get('name')}...")
+                pages_count += 1
+
+                with BytesIO() as output:
+                    image.save(output, format="JPEG")
+                    pdf['data'] = output.getvalue()
+
+                data, response = procces_pdf2image_rode(pdf)
                 
                 if "filtros" in response:
                     if "hoja de control" in response['filtros']:
-                        st.error(f':warning: Existe una hoja de control en la página **{i + 1}** del PDF "**{pdf.name}**"')
-                        errors.append(f'Existe una hoja de control en la página **{i + 1}** del PDF "**{pdf.name}**"')
+                        st.error(f':warning: Existe una hoja de control en la página **{pdf.get('page')}** del PDF "**{pdf.get('name')}**"')
+                        errors.append(f'Existe una hoja de control en la página **{pdf.get('page')}** del PDF "**{pdf.get('name')}**"')
                         data["filtros"] = ["hoja de control"]
 
-                if version == "v1":
-                    if len(uploaded_pdf) < 3:
-                        st.caption(f"Pagina {i + 1} del PDF {pdf.name}")
+                if len(uploaded_pdf) < 3:
+                    st.caption(f"Pagina {pdf.get('page')}/{pdf.get('page_total')} del PDF {pdf.get('name')}")
+                    single_model_metrics(response)
+
+                    dataframe = pd.concat([dataframe, pd.DataFrame(data)], axis=0, ignore_index=True)
+                    placeholder.dataframe(dataframe)
+
+
+                if response['data'][0]['name'] == "rotado" or data.get("filtros"):
+                    if len(uploaded_pdf) >= 3:
+                        st.caption(f"Pagina {pdf.get('page')}/{pdf.get('page_total')} del PDF {pdf.get('name')}")
                         single_model_metrics(response)
-                        dataframe = pd.concat([dataframe, pd.DataFrame(data)], axis=0, ignore_index=True)
-                        placeholder.dataframe(dataframe)
 
+                    bad_dataframe = pd.concat([bad_dataframe, pd.DataFrame(data)], axis=0, ignore_index=True)
+                    bad_placeholder.dataframe(bad_dataframe)
 
-                    if response['data'][0]['name'] == "rotado" or data.get("filtros"):
-                        if len(uploaded_pdf) >= 3:
-                            st.caption(f"Pagina {i + 1} del PDF {pdf.name}")
-                            single_model_metrics(response)
+                    if response['data'][0]['name'] == "rotado":
+                        st.error(f':warning: La Página **{pdf.get("page")}** del PDF "**{pdf.get("name")}**" está rotada.')
 
-                        bad_dataframe = pd.concat([bad_dataframe, pd.DataFrame(data)], axis=0, ignore_index=True)
-                        bad_placeholder.dataframe(bad_dataframe)
+                        if show_image and len(uploaded_pdf) >= 3:
+                            st.image(pdf['data'], use_column_width=True, caption=f"Pagina {pdf.get('page')}/{pdf.get('page_total')} del PDF {pdf.get('name')}", output_format="JPEG")
 
-                        if response['data'][0]['name'] == "rotado":
-                            st.error(f':warning: La Página **{i + 1}** en el PDF está rotada.')
-
-                            if show_image and len(uploaded_pdf) >= 3:
-                                st.image(image_path, use_column_width=True, caption="Uploaded Image", output_format="JPEG")
-
-                            st.divider()
+                        st.divider()
 
                 if show_image and len(uploaded_pdf) < 3:
-                    st.image(image_path, use_column_width=True, caption="Uploaded Image", output_format="JPEG")
+                    st.image(pdf['data'], use_column_width=True, caption=f"Pagina {pdf.get('page')}/{pdf.get('page_total')} del PDF {pdf.get('name')}", output_format="JPEG")
 
                 if errors:
                     alerts.error(f':warning: {", ".join(errors)}')
-                
-                try:
-                    os.remove(name_file_rand)
-                except PermissionError:
-                    print(f"Error al eliminar el archivo {image_path}")
 
             pages_progress.progress(1.0, text="Fin del procesamiento")
             pages_count = 0
@@ -204,9 +205,9 @@ def process_pdf_file(uploaded_pdf, show_image, version="v1"):
 def main():
     if st.button("Procesar archivos", help="Presiona el botón para procesar los archivos cargados", use_container_width=True):
         if uploaded_file:
-            process_uploaded_images(uploaded_file, show_image, version)
+            process_uploaded_images(uploaded_file, show_image)
         if uploaded_pdf:
-            process_pdf_file(uploaded_pdf, show_image, version)
+            process_pdf_file(uploaded_pdf, show_image)
 
 if __name__ == "__main__":
     main()
