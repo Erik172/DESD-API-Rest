@@ -20,7 +20,7 @@ st.set_page_config(
 )
 
 st.title("TilDe (Tilted Detection) Detección de inclinación 📐")
-st.warning("En Construcción", icon="🚧")
+st.success("Versiones estable para uso en producción", icon="🚀")
 
 work_id_default = f"rode_{datetime.now().strftime('%Y%m%d%H%M%S')}"
 work_id = st.text_input("Identificador de trabajo", placeholder=f"Identificador de trabajo (Opcional)")
