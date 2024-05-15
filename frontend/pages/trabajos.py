@@ -22,8 +22,10 @@ for work in works:
                     mime="text/csv"
                 )
 
-            if st.button(f"Eliminar trabajo {work}"):
-                requests.delete(f"http://localhost:5000/works/{work}")
-                requests.delete(f"http://localhost:5000/work/{work}/export")
-                st.success(f"Trabajo {work} eliminado con éxito.")
-                st.toast("Trabajo eliminado con éxito.", icon="✅")
+        if st.button(f"Eliminar trabajo {work}"):
+            requests.delete(f"http://localhost:5000/works/{work}")
+            requests.delete(f"http://localhost:5000/work/{work}/export")
+            st.success(f"Trabajo {work} eliminado con éxito.")
+            st.toast("Trabajo eliminado con éxito.", icon="✅")
+            # recargar la página
+            st.experimental_rerun()

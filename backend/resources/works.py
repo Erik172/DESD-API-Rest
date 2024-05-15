@@ -52,5 +52,8 @@ class WorkExport(Resource):
         return jsonify(data)
     
     def delete(self, work_id):
-        os.remove(f"exports/{work_id}.csv")
-        return jsonify({"status": "ok"})
+        try:
+            os.remove(f"exports/{work_id}.csv")
+            return jsonify({"status": "ok"})
+        except:
+            return jsonify({"status": "pass"})
