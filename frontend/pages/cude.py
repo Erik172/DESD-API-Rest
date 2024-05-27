@@ -83,8 +83,8 @@ def process_uploaded_images(uploaded_file, show_image, version="v1"):
 
             if "filtros" in response:
                 if "hoja de control" in response['filtros']:
-                    st.error(f':warning: Existe una hoja de control en la imagen "**{file.name}**"')
-                    errors.append(f'Existe una hoja de control en la imagen "**{file.name}**"')
+                    st.error(f':warning: Existe una hoja de control en la imagen **{file.get("name")}**')
+                    errors.append(f'Existe una hoja de control en la imagen **{file.get("name")}**')
                     data["filtros"] = ["hoja de control"]
 
             st.caption(file.name)   
@@ -158,8 +158,8 @@ def process_pdf_file(uploaded_pdf, show_image, version="v1"):
                 
                 if "filtros" in response:
                     if "hoja de control" in response['filtros']:
-                        st.error(f':warning: Existe una hoja de control en la página **{i + 1}** del PDF "**{pdf.name}**"')
-                        errors.append(f'Existe una hoja de control en la página **{i + 1}** del PDF "**{pdf.name}**"')
+                        st.error(f':warning: Existe una hoja de control en la página **{pdf.get("page")}** del PDF **{pdf.get("name")}**')
+                        errors.append(f'Existe una hoja de control en la página **{pdf.get("page")}** del PDF **{pdf.get("name")}**')
                         data["filtros"] = ["hoja de control"]
 
                 if version == "v1":

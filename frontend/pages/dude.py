@@ -23,6 +23,7 @@ def process_uploaded_images(uploaded_file, folder_name: str = "dude", show_image
         st.error("Debes cargar al menos dos imágenes")
         
     else:
+        st.info(f"Tiempo estimado de procesamiento: {(((len(uploaded_file) * 2.2) * 2) / 60):.2f} minutos")
         with st.spinner(f"subiendo {len(uploaded_file)} imágenes..."):
             bar_progress = st.progress(0, text="Subiendo archivos...")
             url = f"http://localhost:5000/dude/{folder_name}"
