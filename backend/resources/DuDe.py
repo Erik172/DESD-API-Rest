@@ -22,10 +22,19 @@ class DuDeBase:
             text = self.ocr_core(file_path)
             initial = text[:num_initial_chars]
 
+            #TODO: Agregar un filtro para ignorar archivos vacíos y agregarlo al reporte
+            if len(text) == 0:
+                if not "texto_no_identificado" in self.duplicates:
+                    self.duplicates["texto_no_identificado"] = [file]
+                else:
+                    self.duplicates["texto_no_identificado"].append(file)
+                    
+                continue
+
             if initial in self.hash_map:
                 for files_same_initial in self.hash_map[initial]:
                     file_text = self.ocr_core(os.path.join(self.data_dir, files_same_initial))
-                    if file_text[:10] == text[:10]:
+                    if file_text[:100] == text[:100]:
                         if files_same_initial in self.duplicates:
                             if file not in self.duplicates[files_same_initial]:  # Evitar duplicados
                                 self.duplicates[files_same_initial].append(file)
@@ -56,6 +65,7 @@ class DuDe(Resource):
         start_time = datetime.now()
         dude = DuDeBase(f'temp/{dir_name}')
         dude.find_duplicates()
+            
         return  {
             "duplicates": dude.get_duplicates(),
             # "hash_map": dude.get_hash_map(),

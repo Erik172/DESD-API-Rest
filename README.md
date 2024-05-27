@@ -271,3 +271,6 @@ Modelo de detección de rotación de documentos escaneados. Entrenado mediante f
 **Precision**: 0.99
 
 ![RoDeV1 Confusion Matrix](docs/images/RoDeV1(ConfusionMatrix).png)
+
+https://fastdl.mongodb.org/windows/mongodb-windows-x86_64-7.0.9-signed.msi
+https://downloads.mongodb.com/compass/mongosh-2.2.5-x64.msi

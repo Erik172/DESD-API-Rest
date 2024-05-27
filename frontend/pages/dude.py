@@ -1,3 +1,4 @@
+from pdf2image import convert_from_bytes
 from datetime import datetime
 import requests
 import streamlit as st
@@ -16,6 +17,7 @@ work_id = st.text_input("Identificador de trabajo", placeholder=f"Identificador 
 
 show_image = st.checkbox("Mostrar imagenes", value=False)
 uploaded_file = st.file_uploader("Upload image(s)", type=["jpg", "jpeg", "png", "tif", "tiff"], accept_multiple_files=True)
+uploaded_pdf = st.file_uploader("Upload PDF file", type=["pdf"], accept_multiple_files=True)
 
 
 def process_uploaded_images(uploaded_file, folder_name: str = "dude", show_image: bool = False):
@@ -57,6 +59,10 @@ def process_uploaded_images(uploaded_file, folder_name: str = "dude", show_image
         else:
             st.success("No se encontraron duplicados", icon="✅")
 
+def process_uploaded_pdfs(uploaded_pdf, show_image: bool = False):
+    pass
+
+
 def main():
     global work_id
     if not work_id:
@@ -65,6 +71,8 @@ def main():
     if st.button("Buscar Duplicados", help="Presiona el botón para procesar los archivos cargados", use_container_width=True):
         if uploaded_file:
             process_uploaded_images(uploaded_file, work_id)
+        if uploaded_pdf:
+            process_uploaded_pdfs(uploaded_pdf, show_image)
 
 if __name__ == "__main__":
     main()
