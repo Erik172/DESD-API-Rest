@@ -29,7 +29,7 @@ work_id = st.text_input("Identificador de trabajo", placeholder=f"Identificador 
 filters = st.multiselect(
     "Selecciona los filtros a utilizar",
     ["Hoja de Control", "Hoja en Blanco"],
-    ["Hoja de Control"]
+    []
 )
     
 show_image = st.checkbox("Mostrar imagenes", value=False)
@@ -66,6 +66,11 @@ def process_uploaded_images(uploaded_file, show_image):
         inicio_time = datetime.now()
         fin_process = st.empty()
 
+        if len(uploaded_file) >= 3:
+            st.warning(f":warning: solo se mostrarán los resultados con problemas, para ver todos los resultados puede ir a la pagina de **trabajos** y seleccionar el trabajo: **{work_id}**")
+
+        st.divider()
+
         i = 0.0
 
         for file in uploaded_file:
@@ -85,26 +90,29 @@ def process_uploaded_images(uploaded_file, show_image):
                     errors.append(f'Existe una hoja de control en la imagen **{file.get("name")}**')
                     data["filtros"] = ["hoja de control"]
 
-            st.caption(file.get("name"))   
+            if len(uploaded_file) < 3:
+                st.caption(file.get("name"))   
 
-            single_model_metrics(response)
+                single_model_metrics(response)
 
-            dataframe = pd.concat([dataframe, pd.DataFrame(data)], axis=0, ignore_index=True)
+                dataframe = pd.concat([dataframe, pd.DataFrame(data)], axis=0, ignore_index=True)
+                placeholder.dataframe(dataframe)
 
             if response['data'][0]['name'] == "rotado":
                 bad_dataframe = pd.concat([bad_dataframe, pd.DataFrame(data)], axis=0, ignore_index=True)
                 st.error(f':warning: La imagen "**{file.get("name")}**" está rotada.')
+                if show_image and len(uploaded_file) >= 3:
+                    st.image(file.get("data"), use_column_width=True, caption=f"Uploaded Image {file.get('name')}", output_format="JPEG")
 
-            if show_image:
+                bad_placeholder.dataframe(bad_dataframe)
+
+            if show_image and len(uploaded_file) < 3:
                 st.image(file.get("data"), use_column_width=True, caption=f"Uploaded Image {file.get('name')}", output_format="JPEG")
 
             if errors:
                 alerts.error(f':warning: {", ".join(errors)}')
 
             st.divider()
-
-            placeholder.dataframe(dataframe)
-            bad_placeholder.dataframe(bad_dataframe)
 
         bar_progress.progress(1.0, text="Fin del procesamiento")
         fin_process.info(f'Fin del procesamiento: **{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}**, tiempo total (Minutos): **{round((datetime.now() - inicio_time).total_seconds() / 60, 2)}**')
