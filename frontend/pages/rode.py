@@ -23,7 +23,7 @@ st.title("RoDe (Rotation Detection) Detección de rotación 🔄")
 
 st.success("Version estable para uso en producción", icon="🚀")
 
-work_id_default = f"rode_{datetime.now().strftime('%Y%m%d%H%M%S')}"
+work_id_default = f"rode_{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
 work_id = st.text_input("Identificador de trabajo", placeholder=f"Identificador de trabajo (Opcional)")
 
 filters = st.multiselect(
