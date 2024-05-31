@@ -2,7 +2,7 @@ import requests
 import streamlit as st
 from datetime import datetime
 
-st.title("Trabajos 📁")
+st.title("Resultados 📁")
 
 works = requests.get("http://localhost:5000/works").json()
 
