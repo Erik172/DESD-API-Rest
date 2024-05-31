@@ -1,7 +1,7 @@
 import streamlit as st
 
 st.page_link('main.py', label='Home', icon='🏠', disabled=True)
-st.page_link('pages/Resultados.py', label='Resultados', icon='📂', help='Pagina donde se encuentra todos los resultados de todos los modelos corridos')
+st.page_link('pages/resultados.py', label='Resultados', icon='📂', help='Pagina donde se encuentra todos los resultados de todos los modelos corridos')
 st.page_link('pages/auditoria.py', label='Auditoría', icon='🔍', disabled=True)
 st.page_link('pages/tilde.py', label='TilDe (Tilted Detection) Detección de inclinación', icon='📐', help='Modelo de Detección de inclinación', disabled=False)
 st.page_link('pages/rode.py', label='RoDe (Rotation Detection) Detección de rotación', icon='🔄', help='Modelo de Deteccion de Rotacion')
