@@ -1,3 +1,4 @@
+#TODO: Refactorizar el código para que sea más limpio y ordenado
 from flask import request, jsonify, json
 from flask_restful import Resource
 from datetime import datetime
