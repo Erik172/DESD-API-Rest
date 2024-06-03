@@ -2,10 +2,10 @@ from database import get_database
 
 db = get_database()
 
-class Work:
-    def __init__(self, work_id: str = None):
-        self.work_id = work_id
-        self.collection = db[work_id]
+class Resultados:
+    def __init__(self, resultado_id: str = None):
+        self.resultado_id = resultado_id
+        self.collection = db[resultado_id]
 
     def save(self, data: dict):
         result = self.collection.insert_one(data)
@@ -35,11 +35,12 @@ class Work:
         if not data:
             return None
         keys = data[0].keys()
-        with open(f"exports/{self.work_id}.csv", "w") as f:
+        with open(f"exports/{self.resultado_id}.csv", "w") as f:
             f.write(",".join(keys) + "\n")
             for document in data:
                 f.write(",".join([str(document[key]) for key in keys]) + "\n")
-        return f"{self.work_id}.csv"
+                
+        return f"{self.resultado_id}.csv"
     
     def count(self):
         return self.collection.count_documents({})
