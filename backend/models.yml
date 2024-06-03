@@ -1,0 +1,3 @@
+rode: models/rode_v2.5.pt
+tilde: models/tilde_v1.pt
+cude: models/cude_v1.pt
