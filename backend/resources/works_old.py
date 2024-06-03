@@ -1,8 +1,9 @@
 #TODO: Refactorizar el código para que sea más limpio y ordenado
+#FIXME: Corregir errores en db
 from flask import request, jsonify, json
 from flask_restful import Resource
 from datetime import datetime
-from db import Work
+from db import Resultados
 from database import get_database
 import os
 
@@ -18,30 +19,30 @@ class Works(Resource):
     
 class WorkEndPoint(Resource):
     def get(self, work_id):
-        work = Work(work_id)
+        work = Resultados(work_id)
         return json.loads(json.dumps(list(work.get_all()), default=str))
     
     def post(self, work_id):
-        work = Work(work_id)
+        work = Resultados(work_id)
         data = request.json
         data['created_at'] = datetime.now()
         result = work.save(data)
         return jsonify({"_id": str(result)})
     
     def put(self, work_id, document_id):
-        work = Work(work_id)
+        work = Resultados(work_id)
         data = request.json
         result = work.update(document_id, data)
         return jsonify({"updated_count": result})
     
     def delete(self, work_id, document_id):
-        work = Work(work_id)
+        work = Resultados(work_id)
         result = work.delete(document_id)
         return jsonify({"deleted_count": result})
     
 class WorkExport(Resource):
     def get(self, work_id):
-        work = Work(work_id)
+        work = Resultados(work_id)
         file_name = work.all_documents_to_csv()
         data = {
             "file_name": file_name,

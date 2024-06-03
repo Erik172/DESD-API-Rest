@@ -1,1 +1,1 @@
-from .models import Work
+from .models import Resultados

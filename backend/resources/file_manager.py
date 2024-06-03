@@ -33,6 +33,7 @@ class Upload(Resource):
         return '.' in filename and filename.rsplit('.', 1)[1].lower() in {'png', 'jpg', 'jpeg', 'pdf', 'tif', 'tiff'}
 
 class Download(Resource):
+
     def get(self, file_name):
         """
         Retrieves a file with the given file_name.

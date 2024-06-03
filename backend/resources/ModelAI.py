@@ -5,6 +5,15 @@ import yaml
 
 class ModelAI:
     def __init__(self, model_name: str) -> None:
+        """
+        Initializes an instance of the ModelAI class.
+
+        Parameters:
+        - model_name (str): The name of the model to be used.
+
+        Returns:
+        None
+        """
         with open('models.yml') as file:
             config = yaml.load(file, Loader=yaml.FullLoader)
 
@@ -33,4 +42,10 @@ class ModelAI:
         return response
     
     def get_results(self) -> dict:
+        """
+        Retrieves the results of the AI model.
+
+        Returns:
+            dict: A dictionary containing the parsed results of the AI model.
+        """
         return parse_result_yolov8(self.results)
