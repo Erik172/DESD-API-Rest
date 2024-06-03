@@ -22,14 +22,13 @@ st.set_page_config(
 st.title("TilDe (Tilted Detection) Detección de inclinación 📐")
 st.success("Versiones estable para uso en producción", icon="🚀")
 
-# LA FECHA ESTE EN FORMATO AÑO-MES-DIA HORA:MINUTO:SEGUNDO
 work_id_default = f"tilde_{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
 work_id = st.text_input("Identificador de trabajo", placeholder=f"Identificador de trabajo (Opcional)")
 
 filters = st.multiselect(
     "Selecciona los filtros a utilizar",
     ["Hoja de Control", "Hoja en Blanco"],
-    ["Hoja de Control"]
+    []
 )
 
 show_image = st.checkbox("Mostar imagen previa", value=False)
