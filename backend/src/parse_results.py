@@ -33,16 +33,16 @@ def parse_result_yolov8(result) -> dict:
             class_name, confidence = re.split(r'(\d+\.\d+)', i.strip())[:2]
             
             class_name_mapping = {
-                'rotated': 'rotado',
-                'no_rotated': 'no_rotado',
-                'tilted': 'inclinado',
-                'no tilted': 'no_inclinado',
-                'cut': 'con_corte_de_información',
-                'no_cut': 'sin_corte_de_información'
+                'rotated ': 'rotado',
+                'no_rotated ': 'no_rotado',
+                'tilted ': 'inclinado',
+                'no tilted ': 'no_inclinado',
+                'cut ': 'con_corte_de_información',
+                'no_cut ': 'sin_corte_de_información'
             }
             
             class_name = class_name_mapping.get(class_name, class_name)
-            confidence = float(confidence)
+            confidence = float(confidence) * 100
             
             result_dict['data'].append({
                 'name': class_name,
