@@ -40,12 +40,3 @@ class ModelAI:
         response['model'] = self.model
         self.results = response
         return response
-    
-    def get_results(self) -> dict:
-        """
-        Retrieves the results of the AI model.
-
-        Returns:
-            dict: A dictionary containing the parsed results of the AI model.
-        """
-        return parse_result_yolov8(self.results)
