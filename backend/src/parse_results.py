@@ -75,7 +75,7 @@ def save_results(results: dict, resultado_id: str) -> bool:
                         'modelo': model_name,
                         'prediccion': results[filename][model_name][i]['prediccion'],
                         'confianza': results[filename][model_name][i]['confianza'],
-                        'tiempo(s)': results[filename][model_name][i]['timpo(s)'],
+                        'tiempo(s)': results[filename][model_name][i]['tiempo(s)'],
                         'fecha': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
                     }
                     db[resultado_id].insert_one(data)

@@ -68,7 +68,7 @@ class DESD(Resource):
                         results[filename][model_name][str(i)] = {
                             'prediccion': model_results['data'][0]['name'],
                             'confianza': model_results['data'][0]['confidence'],
-                            'timpo(s)': model_results['time']
+                            'tiempo(s)': model_results['time']
                         }
                         os.remove('temp/' + filename + f'_{i}.png')
 
@@ -80,7 +80,7 @@ class DESD(Resource):
                         '0': {
                             'prediccion': model_results['data'][0]['name'],
                             'confianza': model_results['data'][0]['confidence'],
-                            'timpo(s)': model_results['time']
+                            'tiempo(s)': model_results['time']
                         }
                     }
 
