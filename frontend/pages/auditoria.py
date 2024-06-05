@@ -26,6 +26,10 @@ def process_files(upload_files):
     global models
     global result_id
 
+    if len(models) == 0:
+        st.warning("Debes seleccionar al menos un modelo", icon="⚠️")
+        return
+
     if not result_id:
         result_id = f'auditoria_{datetime.now().strftime("%Y-%m-%d_%H-%M-%S")}'
     else:
@@ -56,6 +60,11 @@ def process_files(upload_files):
 
     progress_bar.progress(100, "Procesamiento de archivos completado")
     st.toast("Procesamiento de archivos completado", icon="🎈")
+
+    with st.sidebar:
+        if st.button("Limpiar", help="Limpiar los archivos procesados", use_container_width=True):
+            st.caching.clear_cache()
+            st.experimental_rerun()
 
 if st.button("Procesar", help="Procesar las imágenes y archivos PDF subidos", use_container_width=True):
     if uploaded_file:

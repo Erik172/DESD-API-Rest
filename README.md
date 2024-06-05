@@ -1,7 +1,8 @@
 # DESD (Detection Errors Scanned Documents) API Rest
-
+# TODO: Re escribir y documentar la reestructuracion del backend?
 **Menu:**
 - [DESD (Detection Errors Scanned Documents) API Rest](#desd-detection-errors-scanned-documents-api-rest)
+- [TODO: Re escribir y documentar la reestructuracion del backend?](#todo-re-escribir-y-documentar-la-reestructuracion-del-backend)
   - [Description](#description)
   - [Installation](#installation)
     - [Ejecución con Docker](#ejecución-con-docker)
