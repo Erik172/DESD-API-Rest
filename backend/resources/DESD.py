@@ -1,7 +1,8 @@
-from flask import request
-from flask_restful import Resource
 from werkzeug.utils import secure_filename
 from pdf2image import convert_from_path
+from PIL import Image, ImageSequence
+from flask_restful import Resource
+from flask import request
 from src import save_results
 import os
 
@@ -45,6 +46,7 @@ class DESD(Resource):
             return {"message": "No file part in the request"}, 400
         
         file = request.files['file']
+        # hacer que .extension sea en minisculas
         model_names = request.form.getlist('model_names')
         resultado_id = request.form.get('result_id')
 
@@ -57,7 +59,7 @@ class DESD(Resource):
             file.save('temp/' + filename)
             results[filename] = {}
 
-            if filename.endswith('.pdf'):
+            if filename.lower().endswith('.pdf'):
                 images = convert_from_path('temp/' + filename)
                 for model_name in model_names:
                     model = ModelAI(model_name)
@@ -72,6 +74,26 @@ class DESD(Resource):
                         }
                         os.remove('temp/' + filename + f'_{i}.png')
 
+            elif filename.lower().endswith('.tiff') or filename.lower().endswith('.tif'):
+                tiff_image = Image.open('temp/' + filename)
+                for model_name in model_names:
+                    model = ModelAI(model_name)
+                    results[filename][model_name] = {}
+                    for i, page in enumerate(ImageSequence.Iterator(tiff_image)):
+                        jpg_file_path = f"temp/{filename}_{i}.jpg"
+                        page.save(jpg_file_path, "JPEG")
+                        model_results = model.predict(jpg_file_path)
+                        results[filename][model_name][str(i)] = {
+                            'prediccion': model_results['data'][0]['name'],
+                            'confianza': model_results['data'][0]['confidence'],
+                            'tiempo(s)': model_results['time']
+                        }
+                        # FIXME: Solucionar un proeceso en caso de que no se pueda borrar el archivo
+                        try:
+                            os.remove(jpg_file_path)
+                        except PermissionError:
+                            pass
+
             else:
                 for model_name in model_names:
                     model = ModelAI(model_name)
@@ -83,8 +105,11 @@ class DESD(Resource):
                             'tiempo(s)': model_results['time']
                         }
                     }
-
-            os.remove('temp/' + filename)
+            # FIXME: Solucionar un proeceso en caso de que no se pueda borrar el archivo
+            try:
+                os.remove('temp/' + filename)
+            except PermissionError:
+                pass
 
             if save_results(results, resultado_id) == False:
                 return {"message": "Error saving results"}, 500
