@@ -1,5 +1,9 @@
 exports/*.csv
+exports/*.json
+exports/*.jpg
 temp/*.jpg
 temp/*.png
 temp/*.json
 temp/*.csv
+temp/*.tif
+temp/*.tiff
