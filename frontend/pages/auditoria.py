@@ -1,13 +1,7 @@
-from pdf2image import convert_from_bytes
+from components import display_multi_metrics
+from datetime import datetime
 import streamlit as st
-import pandas as pd
 import requests
-import os
-
-from src import (
-    procces_image_rode,
-    procces_pdf2image_rode
-)
 
 st.set_page_config(
     page_title="Auditoría",
@@ -17,52 +11,52 @@ st.set_page_config(
 )
 
 st.title("Auditoría 🔍")
-st.error(":warning: **¡Atención!** Esta pagina esta en desarrollo y puede no funcionar correctamente.")
+
+result_id = st.text_input("Identificador para guardar los resultados", placeholder=f"Identificador para guardar los resultados (Optional)")
 
 models = st.multiselect(
     "Selecciona los modelos a utilizar",
-    ["TilDe", "RoDe", "CuDe", "DuDe"],
-    ["RoDe"]
+    ["Inclinacion", "Rotacion", "Corte_informacion"],
+    ["Rotacion"]
 )
 
-filters = st.multiselect(
-    "Selecciona los filtros a utilizar",
-    ["Hoja de Control", "Hoja en Blanco"],
-    ["Hoja de Control"]
-)
-    
-show_image = st.checkbox("Mostrar Imagenes", value=False)
+uploaded_file = st.file_uploader("Subir Archivos", type=["jpg", "jpeg", "png", "tif", "tiff", "pdf"], accept_multiple_files=True)
 
-uploaded_file = st.file_uploader("Subir Imagenes", type=["jpg", "jpeg", "png", "tif", "tiff"], accept_multiple_files=True)
-uploaded_pdf = st.file_uploader("Subir Archivos PDF", type=["pdf"], accept_multiple_files=True)
+def process_files(upload_files):
+    global models
+    global result_id
 
-def process_images(upload_files):
-    st.write(len(upload_files))
+    if not result_id:
+        result_id = f'auditoria_{datetime.now().strftime("%Y-%m-%d_%H-%M-%S")}'
+
+    models = [model.lower() for model in models]
+
     if len(upload_files) == 0:
         st.warning("Debes subir al menos un archivo", icon="⚠️")
-        
-    if not models and not filters:
-        st.warning("Debes seleccionar al menos un modelo o filtro", icon="⚠️")
+
+    progress_bar = st.progress(0, text=f"Procesando archivos {0}/{len(upload_files)}")
+
+    st.success(f"Los resultados se guardarán con el identificador: **{result_id}**")
+    st.info(f"Total de archivos a procesar: **{len(upload_files)}**")
+    st.info(f"Modelos seleccionados: **{', '.join(models)}**")
 
     for file in upload_files:
-        image = file.read()
-        
-        if "TilDe" in models:
-            pass
-        if "RoDe" in models:
-            data, response = procces_image_rode(image, file.name)
-            st.write(data)
-            st.write(response)
-        if "CuDe" in models:
-            pass
-        if "DuDe" in models:
-            pass
+        progress_bar.progress(upload_files.index(file) / len(upload_files), f"Procesando archivos {upload_files.index(file) + 1}/{len(upload_files)}")
+        url = 'http://localhost:5000/desd'
+        files = {'file': file}
+        response = requests.post(url, files=files, data={'model_names': models, 'result_id': result_id})
+        # st.write(response.json())
+        if len(upload_files) < 3:
+            display_multi_metrics(response.json())
+        #FIXME: Crear un mecanismo para borrar los csv generados
+        create_csv = requests.get(f"http://localhost:5000/export/{result_id}")
+        download.markdown(f"Descargar resultados: [CSV](http://localhost:5000{create_csv.json()['url']})")
 
-def process_pdfs(upload_files):
-    pass
+    progress_bar.progress(100, "Procesamiento de archivos completado")
+    st.toast("Procesamiento de archivos completado", icon="🎈")
 
-if st.button("Procesar", help="Procesar las imagenes y archivos PDF subidos", use_container_width=True):
+if st.button("Procesar", help="Procesar las imágenes y archivos PDF subidos", use_container_width=True):
     if uploaded_file:
-        process_images(uploaded_file)
-    if uploaded_pdf:
-        process_pdfs(uploaded_pdf)
+        with st.sidebar:
+            download = st.empty()
+        process_files(uploaded_file)

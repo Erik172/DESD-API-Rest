@@ -5,6 +5,7 @@ from datetime import datetime
 import pytesseract
 import os
 
+#TODO: Separar esto en un archivo aparte
 class DuDeBase:
     def __init__(self, data_dir):
         self.hash_map = {}
@@ -51,7 +52,8 @@ class DuDeBase:
 
     def get_hash_map(self) -> dict:
             return self.hash_map
-    
+
+#FIXME: Permitir PDF
 class DuDe(Resource):
     def post(self, dir_name: str):
         file = request.files['file']

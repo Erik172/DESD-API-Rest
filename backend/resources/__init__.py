@@ -1,6 +1,5 @@
-from .works import Works, WorkEndPoint, WorkExport
-from .TilDe import TilDe
-from .RoDe import RoDe
-from .CuDe import CuDe
-from .DuDe import DuDe
-from .audit import Audit
+from .resultados import Resultados
+from .export import Export
+from .model_ai import ModelAI
+from .dude import DuDe
+from .desd import DESD

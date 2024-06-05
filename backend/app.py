@@ -1,26 +1,12 @@
 from flask import Flask, send_file
 from flask_restful import Api
-import sentry_sdk
 import os
 
 from resources import (
-    TilDe,
-    RoDe,
-    CuDe,
     DuDe,
-    Audit
-)
-
-from resources import (
-    Works,
-    WorkEndPoint as Work,
-    WorkExport
-)
-
-sentry_sdk.init(
-    dsn="https://e9cca8077d072637f2c5934a3327536c@o4504133595365376.ingest.us.sentry.io/4507189202452480",
-    traces_sample_rate=1.0,
-    profiles_sample_rate=1.0,
+    DESD,
+    Resultados,
+    Export,
 )
 
 basedir = os.path.abspath(os.path.dirname(__file__))
@@ -28,22 +14,29 @@ basedir = os.path.abspath(os.path.dirname(__file__))
 app = Flask(__name__)
 api = Api(app)
 
-api.add_resource(Works, "/works", "/works/<string:collection_name>")
+api.add_resource(Resultados, "/resultados", "/resultados/<string:collection_name>", "/resultados/<string:collection_name>/<string:document_id>")
+api.add_resource(Export, "/export/<string:resultado_id>")
 
-api.add_resource(WorkExport, "/work/<string:work_id>/export")
-api.add_resource(Work, "/work/<string:work_id>", "/work/<string:work_id>/<string:document_id>")
-
-api.add_resource(TilDe, "/tilde")
-api.add_resource(RoDe, "/rode")
-api.add_resource(CuDe, "/cude")
 api.add_resource(DuDe, "/dude/<string:dir_name>")
-
-api.add_resource(Audit, "/audit")
+api.add_resource(DESD, "/desd")
 
 @app.route("/descargar/<file_name>")
-def download(file_name):
-    route = f'exports/{file_name}.csv'
-    return send_file(route, as_attachment=True, mimetype='csv')
+def download(file_name: str):
+    """
+    Download a file with the given file name.
+
+    Args:
+        file_name (str): The name of the file to be downloaded.
+
+    Returns:
+        If the file exists, the file will be downloaded as an attachment with the mimetype 'csv'.
+        If the file does not exist, a 404 error message will be returned.
+    """
+    route = os.path.join(basedir, 'exports', f'{file_name}.csv')
+    if os.path.exists(route):
+        return send_file(route, as_attachment=True, mimetype='csv')
+    else:
+        return "File not found", 404
 
 if __name__ == "__main__":
     app.run(debug=False, host="0.0.0.0", port=5000)
