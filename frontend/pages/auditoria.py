@@ -28,6 +28,8 @@ def process_files(upload_files):
 
     if not result_id:
         result_id = f'auditoria_{datetime.now().strftime("%Y-%m-%d_%H-%M-%S")}'
+    else:
+        result_id = result_id.lower().replace(" ", "_")
 
     models = [model.lower() for model in models]
 
