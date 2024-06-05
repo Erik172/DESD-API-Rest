@@ -23,7 +23,6 @@ class DuDeBase:
             text = self.ocr_core(file_path)
             initial = text[:num_initial_chars]
 
-            #TODO: Agregar un filtro para ignorar archivos vacíos y agregarlo al reporte
             if len(text) == 0:
                 if not "texto_no_identificado" in self.duplicates:
                     self.duplicates["texto_no_identificado"] = [file]
