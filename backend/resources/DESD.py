@@ -1,3 +1,4 @@
+# Autor: Erik Garcia
 from werkzeug.utils import secure_filename
 from pdf2image import convert_from_path
 from PIL import Image, ImageSequence
