@@ -1,4 +1,5 @@
 # Autor: Erik Garcia
+# Note: ONLY AI MODELS ARE USED IN THIS FILE
 from werkzeug.utils import secure_filename
 from pdf2image import convert_from_path
 from PIL import Image, ImageSequence
@@ -7,7 +8,7 @@ from flask import request
 from src import save_results
 import os
 
-from resources import ModelAI
+from services import ModelAI
 
 class DESD(Resource):
     """
