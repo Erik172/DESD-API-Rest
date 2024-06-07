@@ -56,6 +56,8 @@ def process_files(upload_files):
             display_multi_metrics(response.json())
         #FIXME: Crear un mecanismo para borrar los csv generados
         create_csv = requests.get(f"http://localhost:5000/export/{result_id}")
+        resultados_id_sidebar.caption(result_id)
+        total_documentos.write(f"Total de imagenes/paginas procesadas: **{create_csv.json()['total']}**")
         download.markdown(f"Descargar resultados: [CSV](http://localhost:5000{create_csv.json()['url']})")
 
     progress_bar.progress(100, "Procesamiento de archivos completado")
@@ -71,5 +73,7 @@ def process_files(upload_files):
 if st.button("Procesar", help="Procesar las imágenes y archivos PDF subidos", use_container_width=True):
     if uploaded_file:
         with st.sidebar:
+            resultados_id_sidebar = st.empty()
+            total_documentos = st.empty()
             download = st.empty()
         process_files(uploaded_file)
