@@ -63,6 +63,8 @@ def process_files(upload_files):
 
     with st.sidebar:
         if st.button("Limpiar", help="Limpiar los archivos procesados", use_container_width=True):
+            delete = requests.delete(f"http://localhost:5000/export/{result_id}")
+            st.toast(delete.json()["status"], icon="🗑️")
             st.caching.clear_cache()
             st.experimental_rerun()
 
