@@ -48,14 +48,14 @@ def process_files(upload_files):
 
     for file in upload_files:
         progress_bar.progress(upload_files.index(file) / len(upload_files), f"Procesando archivos {upload_files.index(file) + 1}/{len(upload_files)}")
-        url = 'http://localhost:5000/desd'
+        url = 'http://localhost:5000/v1/desd'
         files = {'file': file}
-        response = requests.post(url, files=files, data={'model_names': models, 'result_id': result_id})
+        response = requests.post(url, files=files, data={'models': models, 'result_id': result_id})
         # st.write(response.json())
         if len(upload_files) < 3:
             display_multi_metrics(response.json())
         #FIXME: Crear un mecanismo para borrar los csv generados
-        create_csv = requests.get(f"http://localhost:5000/export/{result_id}")
+        create_csv = requests.get(f"http://localhost:5000/v1/export/{result_id}")
         resultados_id_sidebar.caption(result_id)
         total_documentos.write(f"Total de imagenes/paginas procesadas: **{create_csv.json()['total']}**")
         download.markdown(f"Descargar resultados: [CSV](http://localhost:5000{create_csv.json()['url']})")
@@ -65,7 +65,7 @@ def process_files(upload_files):
 
     with st.sidebar:
         if st.button("Limpiar", help="Limpiar los archivos procesados", use_container_width=True):
-            delete = requests.delete(f"http://localhost:5000/export/{result_id}")
+            delete = requests.delete(f"http://localhost:5000/v1/export/{result_id}")
             st.toast(delete.json()["status"], icon="🗑️")
             st.caching.clear_cache()
             st.experimental_rerun()

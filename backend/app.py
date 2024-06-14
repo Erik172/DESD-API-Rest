@@ -14,11 +14,11 @@ basedir = os.path.abspath(os.path.dirname(__file__))
 app = Flask(__name__)
 api = Api(app)
 
-api.add_resource(Resultados, "/resultados", "/resultados/<string:collection_name>", "/resultados/<string:collection_name>/<string:document_id>")
-api.add_resource(Export, "/export/<string:resultado_id>")
+api.add_resource(Resultados, "/v1/resultados", "/v1/resultados/<string:collection_name>")
+api.add_resource(Export, "/v1/export/<string:resultado_id>")
 
-api.add_resource(DuDe, "/dude/<string:dir_name>")
-api.add_resource(DESD, "/desd")
+api.add_resource(DuDe, "/v1/dude/<string:dir_name>")
+api.add_resource(DESD, "/v1/desd")
 
 @app.route("/descargar/<file_name>")
 def download(file_name: str):

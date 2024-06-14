@@ -25,6 +25,22 @@ class DESD(Resource):
 
     """
 
+    def get(self):
+            """
+            Retrieves a list of models from the 'models.yml' file.
+
+            Returns:
+                A tuple containing the list of models and the HTTP status code 200.
+            """
+            import yaml
+
+            with open('models.yml') as file:
+                models = yaml.full_load(file)
+
+            models = list(models.keys())
+
+            return models, 200
+
     def post(self):
         """
         Handles the POST request for file upload, prediction, and result saving.
@@ -49,7 +65,7 @@ class DESD(Resource):
         
         file = request.files['file']
         # hacer que .extension sea en minisculas
-        model_names = request.form.getlist('model_names')
+        model_names = request.form.getlist('models')
         resultado_id = request.form.get('result_id')
 
         if file.filename == '':
@@ -113,8 +129,9 @@ class DESD(Resource):
             except PermissionError:
                 pass
 
-            if save_results(results, resultado_id) == False:
-                return {"message": "Error saving results"}, 500
+            if resultado_id != None:
+                if save_results(results, resultado_id) == False:
+                    return {"message": "Error saving results"}, 500
 
             return results, 200
         

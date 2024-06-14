@@ -22,7 +22,7 @@ def process_uploaded_images(uploaded_file, folder_name: str = "dude"):
 
     with st.spinner(f"subiendo {len(uploaded_file)} imágenes..."):
         bar_progress = st.progress(0, text="Subiendo archivos...")
-        url = f"http://localhost:5000/dude/{folder_name}"
+        url = f"http://localhost:5000/v1/dude/{folder_name}"
         for file in uploaded_file:
             bar_progress.progress(uploaded_file.index(file) / len(uploaded_file), f"Subiendo {uploaded_file.index(file) + 1}/{len(uploaded_file)} archivos...")     
             response = requests.post(url, files={"file": file})
@@ -31,7 +31,7 @@ def process_uploaded_images(uploaded_file, folder_name: str = "dude"):
         
     with st.spinner("Buscando duplicados..."):
         start_time = datetime.now()
-        url = f"http://localhost:5000/dude/{folder_name}"
+        url = f"http://localhost:5000/v1/dude/{folder_name}"
         response = requests.get(url).json()
         end_time = datetime.now()
         elapsed_time = end_time - start_time
@@ -61,7 +61,7 @@ def process_uploaded_images(uploaded_file, folder_name: str = "dude"):
         st.success("No se encontraron duplicados", icon="✅")
 
     with st.sidebar:
-        url = f"http://localhost:5000/export/{folder_name}"
+        url = f"http://localhost:5000/v1/export/{folder_name}"
         response = requests.get(url)
         if int(response.json()['total']) > 0:
             st.caption(response.json()['resultado_id'])
