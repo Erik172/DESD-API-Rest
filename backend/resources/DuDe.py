@@ -32,13 +32,13 @@ class DuDe(Resource):
             file.save(f'temp/{dir_name}/{file.filename}')
             images = convert_from_path(f'temp/{dir_name}/{file.filename}')
             for i, image in enumerate(images):
-                image.save(f'temp/{dir_name}/{file.filename}__pagina_{i}.png')
+                image.save(f'temp/{dir_name}/{file.filename}__pagina_{i + 1}.png')
             os.remove(f'temp/{dir_name}/{file.filename}')
 
         elif file.filename.lower().endswith(('.tiff', '.tif')):
             tiff_image = Image.open(file)
             for i, page in enumerate(ImageSequence.Iterator(tiff_image)):
-                jpg_file_path = f"temp/{dir_name}/{file.filename}__pagina_{i}.jpg"
+                jpg_file_path = f"temp/{dir_name}/{file.filename}__pagina_{i + 1}.jpg"
                 page.save(jpg_file_path, "JPEG")
         else:
             file.save(f'temp/{dir_name}/{file.filename}')
