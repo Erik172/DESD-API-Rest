@@ -46,7 +46,6 @@ class DuDe(Resource):
         return {"message": f"Archivo {file.filename} guardado exitosamente."}, 200
     
     def get(self, dir_name: str) -> dict:
-        collection = self.db[dir_name]
         start_time = datetime.now()
         dude = DuDeBase(f'temp/{dir_name}')
         dude.find_duplicates()
@@ -79,7 +78,11 @@ class DuDe(Resource):
                 else:
                     document[f"duplicado[{i + 1}]"] = duplicate
 
-            collection.insert_one(document)
+            try:
+                collection = self.db[dir_name]
+                collection.insert_one(document)
+            except Exception as e:
+                print(f"Error al insertar en la base de datos: {e}")
         
         return {"duplicados": dude.get_duplicates(), "tiempo(s)": f"{(stop_time - start_time).total_seconds()}"}
     
