@@ -79,6 +79,8 @@ def main():
 
     if not resultado_id:
         resultado_id = f"dude_{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}"
+    else:
+        resultado_id = resultado_id.lower().replace(" ", "_")
 
     if st.button("Buscar Duplicados", help="Presiona el botón para procesar los archivos cargados", use_container_width=True):
         if uploaded_file:
