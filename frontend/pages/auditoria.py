@@ -51,7 +51,7 @@ def process_files(upload_files):
     st.info(f"Modelos seleccionados: **{', '.join(models)}**")
 
     results = []
-    with ThreadPoolExecutor(max_workers=10) as executor:
+    with ThreadPoolExecutor(max_workers=30) as executor:
         future_to_file = {executor.submit(process_single_file, file, models, result_id): file for file in upload_files}
         for i, future in enumerate(as_completed(future_to_file)):
             file = future_to_file[future]
