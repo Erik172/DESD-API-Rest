@@ -7,18 +7,23 @@ class Resultados(Resource):
     db = get_database()
 
     def get(self, collection_name: str = None):
-        """
-        Retrieves data from the specified collection or returns a list of collection names if no collection is specified.
+            """
+            Retrieves the documents from a specified collection or returns a list of available collections.
 
-        Args:
-            collection_name (str, optional): The name of the collection to retrieve data from. Defaults to None.
+            Args:
+                collection_name (str, optional): The name of the collection to retrieve documents from. Defaults to None.
 
-        Returns:
-            Flask Response: A JSON response containing the retrieved data or a list of collection names.
-        """
-        if collection_name:
-            return jsonify(list(self.db[collection_name].find()))
-        return jsonify(self.db.list_collection_names())
+            Returns:
+                Flask Response: A JSON response containing the retrieved documents or a list of available collections.
+            """
+            if collection_name:
+                results = list(self.db[collection_name].find())
+                for result in results:
+                    result['_id'] = str(result['_id'])
+                return jsonify(results)
+            else:
+                collections = self.db.list_collection_names()
+                return jsonify(collections)
     
     def post(self, collection_name: str):
         """

@@ -1,5 +1,3 @@
-# Autor: Erik Garcia
-# Note: ONLY AI MODELS ARE USED IN THIS FILE
 from werkzeug.utils import secure_filename
 from pdf2image import convert_from_path
 from PIL import Image, ImageSequence
@@ -136,4 +134,4 @@ class DESD(Resource):
             return results, 200
         
         return {"message": "Something went wrong"}, 500
-        
+     
