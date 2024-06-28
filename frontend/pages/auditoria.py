@@ -1,8 +1,10 @@
-from concurrent.futures import ThreadPoolExecutor, as_completed
 from components import display_multi_metrics
 from datetime import datetime
+from streamlit_cookies_controller import CookieController
 import streamlit as st
 import requests
+import aiohttp
+import asyncio
 
 st.set_page_config(
     page_title="Auditoría",
@@ -11,9 +13,9 @@ st.set_page_config(
     initial_sidebar_state="auto"
 )
 
-st.title("Auditoría 🔍")
+controller = CookieController()
 
-result_id = st.text_input("Identificador para guardar los resultados", placeholder=f"Identificador para guardar los resultados (Optional)")
+st.title("Auditoría 🔍")
 
 models = st.multiselect(
     "Selecciona los modelos a utilizar",
@@ -23,56 +25,86 @@ models = st.multiselect(
 
 uploaded_file = st.file_uploader("Subir Archivos", type=["jpg", "jpeg", "png", "tif", "tiff", "pdf"], accept_multiple_files=True)
 
-def process_single_file(file, models, result_id):
-    url = 'http://localhost:5000/v1/desd'
-    files = {'file': file}
-    response = requests.post(url, files=files, data={'models': models, 'result_id': result_id})
-    create_csv = requests.get(f"http://localhost:5000/v1/export/{result_id}")
-    csv_url = f"http://localhost:5000{create_csv.json()['url']}"
-    return response.json(), csv_url
+def work_status(result_id):
+    url = f"http://localhost:5000/v1/desd/status/{result_id}"
+    response = requests.get(url)
+    return response
 
 def process_files(upload_files):
     global models
-    global result_id
-
-    if not result_id:
-        result_id = f'auditoria_{datetime.now().strftime("%Y-%m-%d_%H-%M-%S")}'
 
     models = [model.lower() for model in models]
 
     if len(upload_files) == 0:
         st.warning("Debes subir al menos un archivo", icon="⚠️")
         return
+    
+    random_id = requests.get("http://localhost:5000/v1/generate_id").json()["random_id"]
+    st.success(f"Identificador para guardar los resultados: **{random_id}**")
+    controller.set("desd_result_id", random_id, expires=datetime.now().replace(hour=23, minute=59, second=59))
 
-    progress_bar = st.progress(0, text=f"Procesando archivos {0}/{len(upload_files)}")
-
-    st.success(f"Los resultados se guardarán con el identificador: **{result_id}**")
     st.info(f"Total de archivos a procesar: **{len(upload_files)}**")
     st.info(f"Modelos seleccionados: **{', '.join(models)}**")
 
-    results = []
-    with ThreadPoolExecutor(max_workers=30) as executor:
-        future_to_file = {executor.submit(process_single_file, file, models, result_id): file for file in upload_files}
-        for i, future in enumerate(as_completed(future_to_file)):
-            file = future_to_file[future]
-            try:
-                data, csv_url = future.result()
-                results.append((data, csv_url))
-                progress_bar.progress((i + 1) / len(upload_files), f"Procesando archivos {i + 1}/{len(upload_files)}")
-            except Exception as exc:
-                st.error(f"{file.name} generated an exception: {exc}")
+    url = 'http://localhost:5000/v1/desd'
+    files = [('files', (file.name, file, file.type)) for file in upload_files]
+    requests.post(url, files=files, data={"models": models, "result_id": str(random_id)})
 
-    for data, csv_url in results:
-        if len(upload_files) < 3:
-            display_multi_metrics(data)
-        download.markdown(f"Descargar resultados: [CSV]({csv_url})")
+    porcentaje = st.empty()
+    files_process = st.empty()
+    data = st.empty()
+    while True:
+        status = work_status(controller.get("desd_result_id"))
+        if status.status_code == 200:
+            status = status.json()
+            if status["status"] == "in_progress":
+                files_process.info(f"Procesando archivos... {status['files_processed']} de {status['total_files']} completados")
+                porcentaje.progress(float(status["percentage"]) / 100.0, f'{round(status["percentage"], 1)}%')
+            else:
+                files_process.success("Procesamiento completado")
+                porcentaje.progress(1.0, "100% completado")
+                break
+        elif status.status_code == 404:
+            files_process.error("No se encontraron resultados previos")
+            break
+        else:
+            files_process.error("Error al obtener los resultados")
+            break
 
-    progress_bar.progress(100, "Procesamiento de archivos completado")
-    st.toast("Procesamiento de archivos completado", icon="🎈")
+        data.write(status)
+
 
 if st.button("Procesar", help="Procesar las imágenes y archivos PDF subidos", use_container_width=True):
     if uploaded_file:
         with st.sidebar:
-            st.caption(result_id)
             download = st.empty()
         process_files(uploaded_file)
+
+if controller.get("desd_result_id"):
+    st.subheader(f"Resultados previos ({controller.get('desd_result_id')})")
+    porcentaje = st.empty()
+    files_process = st.empty()
+    data = st.empty()
+    while True:
+        status = work_status(controller.get("desd_result_id"))
+        if status.status_code == 200:
+            status = status.json()
+            if status["status"] == "in_progress":
+                files_process.info(f"Procesando archivos... {status['files_processed']} de {status['total_files']} completados")
+                porcentaje.progress(float(status["percentage"]) / 100.0, f'{round(status["percentage"], 1)}%')
+            else:
+                files_process.success("Procesamiento completado")
+                porcentaje.progress(1.0, "100% completado")
+                break
+        elif status.status_code == 404:
+            files_process.error("No se encontraron resultados previos")
+            break
+        else:
+            files_process.error("Error al obtener los resultados")
+            break
+
+        data.write(status)
+
+    if st.button("Limpiar", help="Eliminar resultados previos", use_container_width=True):
+        controller.remove("desd_result_id")
+        st.rerun()
