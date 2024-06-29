@@ -1,7 +1,9 @@
 import requests
 import streamlit as st
 
-st.title("Trabajos 📁")
+st.title("Resultados 📁")
+
+st.logo("https://procesosyservicios.net.co/wp-content/uploads/2019/10/LETRA-GRIS.png")
 
 resultados = requests.get("http://localhost:5000/v1/resultados").json()
 
