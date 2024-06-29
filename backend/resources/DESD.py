@@ -4,6 +4,7 @@ from PIL import Image, ImageSequence
 from flask_restful import Resource
 from flask import request
 from src import save_results
+from datetime import datetime
 import os
 
 from services import ModelAI
@@ -164,7 +165,6 @@ class DESD(Resource):
 
 class DESDStatus(Resource):
     def get(self, result_id: str):
-        from datetime import datetime
         work_status = WorkStatus.query.filter_by(result_id=result_id).first()
         if work_status is None:
             return {"message": "Result not found"}, 404
