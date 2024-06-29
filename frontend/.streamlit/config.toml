@@ -3,4 +3,4 @@ port = 80
 maxUploadSize = 1000
 
 [theme]
-base = "dark"
+base = "light"
