@@ -1,0 +1,15 @@
+description: Ultralytics YOLOv8n-cls model trained on https://storage.googleapis.com/ultralytics-hub.appspot.com/users/QvO4sPTcdhfUkpcpicHgQkdWATp2/datasets/r1Nih8uvRydyqPdIltok/Tilted%20Documents.v1i.folder.zip?X-Goog-Algorithm=GOOG4-RSA-SHA256&X-Goog-Credential=firebase-adminsdk-jsjt9%40ultralytics-hub.iam.gserviceaccount.com%2F20240408%2Fauto%2Fstorage%2Fgoog4_request&X-Goog-Date=20240408T024905Z&X-Goog-Expires=900&X-Goog-SignedHeaders=host&X-Goog-Signature=b99fffc497681b4dd61e2b77a2b5e69135fcc08db6607df3407ef0888439196c1a238d38df162e6f66b5794694b341221242e9007ae2efe5970f84815429745f43d14801880e9965e850f0234c3ce4fcf85b4098faf1eca45a4c8b352140889ae2c33e1e1b7f3dbc3d0c2eaa9cc5b06ac5718eb46f9eb68c9825082b36575558426ef5f3cb6f683cf02a262193158b7fe951bc075c36cf42df2caa30c4b249774f1f7f6d14af525c98575a21e78a26e7a7c0837bb5e7452d6b884cd3071cac76d0af3e30eb2da4ca909789fab75b655c189804c47ec1864a0940df1b2c3b7fda0ff1db92f4236cb68054420bd6d6a3a66548a1b34e27d89640ff7a4245526c18
+author: Ultralytics
+date: '2024-06-30T02:22:07.928416'
+version: 8.2.26
+license: AGPL-3.0 License (https://ultralytics.com/license)
+docs: https://docs.ultralytics.com
+stride: 1
+task: classify
+batch: 1
+imgsz:
+- 640
+- 640
+names:
+  0: no tilted
+  1: tilted
