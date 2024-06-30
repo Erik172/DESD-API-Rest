@@ -1,3 +1,3 @@
-rotacion: models/rode_v2.5.pt
-inclinacion: models/tilde_v1.pt
-corte_informacion: models/cude_v1.5.pt
+rotacion: models/rode_v2.onnx
+inclinacion: models/tilde_v1.onnx
+corte_informacion: models/cude_v1.5.onnx

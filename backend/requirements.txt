@@ -10,3 +10,4 @@ sentry-sdk
 pymongo
 pytesseract
 pdf2image
+openvino
