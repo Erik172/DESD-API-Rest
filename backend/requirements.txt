@@ -11,3 +11,4 @@ pymongo
 pytesseract
 pdf2image
 openvino
+onnxruntime
