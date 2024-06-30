@@ -89,7 +89,7 @@ if controller.get("desd_result_id"):
                 files_process.success("Procesamiento completado")
                 break
         elif status.status_code == 404:
-            if error_count == 5:
+            if error_count == 2:
                 files_process.error("Demasiados intentos fallidos... abortando")
                 break
             
@@ -102,19 +102,21 @@ if controller.get("desd_result_id"):
             break
         
         # data.write(status)
+    try:
+        st.info(f'Total de archivos procesados: {status["total_files"]}')
 
-    st.info(f'Total de archivos procesados: {status["total_files"]}')
-
-    if st.download_button(
-        label="Descargar resultados completos en CSV",
-        data=requests.get(f"http://localhost:5000/v2/export/{controller.get('desd_result_id')}").content,
-        file_name=f"{controller.get('desd_result_id')}.csv",
-        mime="text/csv",
-        help="Descargar los resultados completos en formato CSV",
-        use_container_width=True
-    ):
-        st.toast("Descargando resultados...", icon="📥")
-        requests.delete(f"http://localhost:5000/v2/export/{controller.get('desd_result_id')}")
+        if st.download_button(
+            label="Descargar resultados completos en CSV",
+            data=requests.get(f"http://localhost:5000/v2/export/{controller.get('desd_result_id')}").content,
+            file_name=f"{controller.get('desd_result_id')}.csv",
+            mime="text/csv",
+            help="Descargar los resultados completos en formato CSV",
+            use_container_width=True
+        ):
+            st.toast("Descargando resultados...", icon="📥")
+            requests.delete(f"http://localhost:5000/v2/export/{controller.get('desd_result_id')}")
+    except:
+        pass
 
     if st.button("Limpiar", help="Eliminar resultados previos", use_container_width=True):
         controller.remove("desd_result_id")
