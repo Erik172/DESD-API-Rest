@@ -7,13 +7,6 @@ import time
 
 controller = CookieController()
 
-st.set_page_config(
-    page_title="DuDe (Duplicate Detection)",
-    page_icon="2️⃣",
-    layout="centered",
-    initial_sidebar_state="auto"
-)
-
 st.logo("https://procesosyservicios.net.co/wp-content/uploads/2019/10/LETRA-GRIS.png")
 
 # st.warning("🚧 Pagina en actualizacion a V2 🚧")
