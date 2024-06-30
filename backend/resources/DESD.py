@@ -4,7 +4,6 @@ from PIL import Image, ImageSequence
 from flask_restful import Resource
 from flask import request
 from src import save_results
-from datetime import datetime
 import yaml
 import os
 
@@ -130,12 +129,16 @@ class DESD(Resource):
             print(f"Unable to remove file: {file_path}")
 
 class DESDStatus(Resource):
-    def get(self, result_id: str):
-        work_status = self._get_work_status(result_id)
-        if not work_status:
-            return {"message": "Result not found"}, 404
-        
-        return self._serialize_work_status(work_status), 200
+    def get(self, result_id: str = None):
+        if result_id:
+            work_status = self._get_work_status(result_id)
+            if not work_status:
+                return {"message": "Result not found"}, 404
+            
+            return self._serialize_work_status(work_status), 200
+        else:
+            work_statuses = WorkStatus.query.all()
+            return [self._serialize_work_status(work_status) for work_status in work_statuses], 200
     
     def delete(self, result_id: str):
         work_status = self._get_work_status(result_id)

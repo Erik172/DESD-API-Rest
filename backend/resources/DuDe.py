@@ -12,18 +12,6 @@ class DuDe(Resource):
     db = get_database()
 
     def post(self, dir_name: str) -> dict:
-        """
-        Saves the uploaded file to the specified directory.
-
-        Args:
-            dir_name (str): The name of the directory to save the file in.
-
-        Returns:
-            dict: A dictionary containing a success message.
-
-        Raises:
-            None
-        """
         file = request.files['file']
         if not os.path.exists(f'temp/{dir_name}'):
             os.makedirs(f'temp/{dir_name}')
@@ -87,19 +75,6 @@ class DuDe(Resource):
         return {"duplicados": dude.get_duplicates(), "tiempo(s)": f"{(stop_time - start_time).total_seconds()}"}
     
     def delete(self, dir_name: str) -> dict:
-        """
-        Deletes a directory and its contents.
-
-        Args:
-            dir_name (str): The name of the directory to delete.
-
-        Returns:
-            dict: A dictionary containing a message indicating the result of the deletion.
-
-        Raises:
-            OSError: If an error occurs while deleting the directory.
-
-        """
         if os.path.exists(f'temp/{dir_name}'):
             try:
                 for file in os.listdir(f'temp/{dir_name}'):
@@ -113,14 +88,5 @@ class DuDe(Resource):
         return {"message": "No se encontraron archivos para eliminar."}, 404
 
     def _extract_page_number(self, filename: str) -> int:
-        """
-        Extracts the page number from a filename.
-
-        Args:
-            filename (str): The filename from which to extract the page number.
-
-        Returns:
-            int: The extracted page number, or None if no match is found.
-        """
         match = re.search(r'__pagina_(\d+)', filename)
         return int(match.group(1)) if match else None

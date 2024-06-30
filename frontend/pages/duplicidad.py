@@ -1,6 +1,11 @@
+from streamlit_cookies_controller import CookieController
 from datetime import datetime
 import streamlit as st
 import requests
+import threading
+import time
+
+controller = CookieController()
 
 st.set_page_config(
     page_title="DuDe (Duplicate Detection)",
@@ -9,20 +14,24 @@ st.set_page_config(
     initial_sidebar_state="auto"
 )
 
+st.logo("https://procesosyservicios.net.co/wp-content/uploads/2019/10/LETRA-GRIS.png")
+
+# st.warning("🚧 Pagina en actualizacion a V2 🚧")
 st.title("DuDe (Duplicate Detection) Detección de duplicados 2️⃣")
+st.caption("V1.0 - Estable, con alta precisión 📊")
 
-resultado_id = st.text_input("Identificador para los resultados", placeholder=f"Identificador para los resultados (Opcional)")
-
+st.warning("⚠️ **Advertencia:** No cambiar, cerrar o recargar la página mientras se procesan los archivos. ⚠️")
 uploaded_file = st.file_uploader("Subir Archivos", type=["jpg", "jpeg", "png", "tif", "tiff", "pdf"], accept_multiple_files=True)
 
 
-def process_uploaded_images(uploaded_file, folder_name: str = "dude"):
-    st.success(f"Identificador de resultados: **{folder_name}**", icon="📄")
+def process_uploaded_images(uploaded_file):
+    random_id = requests.get("http://localhost:5000/v2/generate_id").json()["random_id"]
+    st.success(f"Identificador de resultados: **{random_id}**", icon="📄")
     st.info(f"Procesando **{len(uploaded_file)}** archivos... 🔄")
 
     with st.spinner(f"subiendo {len(uploaded_file)} imágenes..."):
         bar_progress = st.progress(0, text="Subiendo archivos...")
-        url = f"http://localhost:5000/v1/dude/{folder_name}"
+        url = f"http://localhost:5000/v1/dude/{random_id}"
         for file in uploaded_file:
             bar_progress.progress(uploaded_file.index(file) / len(uploaded_file), f"Subiendo {uploaded_file.index(file) + 1}/{len(uploaded_file)} archivos...")     
             response = requests.post(url, files={"file": file})
@@ -31,7 +40,7 @@ def process_uploaded_images(uploaded_file, folder_name: str = "dude"):
         
     with st.spinner("Buscando duplicados..."):
         start_time = datetime.now()
-        url = f"http://localhost:5000/v1/dude/{folder_name}"
+        url = f"http://localhost:5000/v1/dude/{random_id}"
         response = requests.get(url).json()
         end_time = datetime.now()
         elapsed_time = end_time - start_time
@@ -47,7 +56,6 @@ def process_uploaded_images(uploaded_file, folder_name: str = "dude"):
 
     delete = requests.delete(url)
     st.toast(delete.json()["message"], icon="☁️")
-
     if response.get('duplicados'):
         duplicates = response.get('duplicados')
         st.warning(f":warning: {len(duplicates)} archivos con duplicados encontrados")
@@ -61,7 +69,7 @@ def process_uploaded_images(uploaded_file, folder_name: str = "dude"):
         st.success("No se encontraron duplicados", icon="✅")
 
     with st.sidebar:
-        url = f"http://localhost:5000/v1/export/{folder_name}"
+        url = f"http://localhost:5000/v1/export/{random_id}"
         response = requests.get(url)
         if int(response.json()['total']) > 0:
             st.caption(response.json()['resultado_id'])
@@ -75,16 +83,9 @@ def process_uploaded_images(uploaded_file, folder_name: str = "dude"):
             st.experimental_rerun()
 
 def main():
-    global resultado_id
-
-    if not resultado_id:
-        resultado_id = f"dude_{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}"
-    else:
-        resultado_id = resultado_id.lower().replace(" ", "_")
-
     if st.button("Buscar Duplicados", help="Presiona el botón para procesar los archivos cargados", use_container_width=True):
         if uploaded_file:
-            process_uploaded_images(uploaded_file, resultado_id)
+            process_uploaded_images(uploaded_file)
 
 if __name__ == "__main__":
     main()

@@ -17,6 +17,8 @@ controller = CookieController()
 
 st.title("Auditoría 🔍")
 
+st.caption("V2.0 - 80% mas rapido 🚀")
+
 models = st.multiselect(
     "Selecciona los modelos a utilizar",
     ["Inclinacion", "Rotacion", "Corte_informacion"],
@@ -26,7 +28,7 @@ models = st.multiselect(
 uploaded_file = st.file_uploader("Subir Archivos", type=["jpg", "jpeg", "png", "tif", "tiff", "pdf"], accept_multiple_files=True)
 
 def work_status(result_id):
-    url = f"http://localhost:5000/v1/desd/status/{result_id}"
+    url = f"http://localhost:5000/v2/desd/status/{result_id}"
     response = requests.get(url)
     return response
 
@@ -39,13 +41,13 @@ def process_files(upload_files):
         st.warning("Debes subir al menos un archivo", icon="⚠️")
         return
     
-    random_id = requests.get("http://localhost:5000/v1/generate_id").json()["random_id"]
+    random_id = requests.get("http://localhost:5000/v2/generate_id").json()["random_id"]
     controller.set("desd_result_id", random_id)
     st.success(f"Identificador para guardar los resultados: **{random_id}**")
     st.info(f"Total de archivos a procesar: **{len(upload_files)}**")
     st.info(f"Modelos seleccionados: **{', '.join(models)}**")
 
-    url = 'http://localhost:5000/v1/desd'
+    url = 'http://localhost:5000/v2/desd'
     files = [('files', (file.name, file, file.type)) for file in upload_files]
     threading.Thread(target=requests.post, args=(url,), kwargs={"files": files, "data": {"models": models, "result_id": str(random_id)}}).start()
     st.caption("Procesando archivos...")
@@ -63,18 +65,26 @@ if controller.get("desd_result_id"):
     files_process = st.empty()
     data = st.empty()
     error_count = 0
-
+    download_partial = st.empty()
     while True:
         status = work_status(controller.get("desd_result_id"))
         if status.status_code == 200:
             status = status.json()
             if status["status"] == "in_progress":
-                files_process.info(f"Procesando archivos...   {status['files_processed']} de {status['total_files']} completados")
                 porcentaje.progress(float(status["percentage"]) / 100.0, f'{round(status["percentage"], 1)}% - {status["files_processed"]} / {status["total_files"]} completados')
-
+                files_process.info(f"Procesando archivos...   {status['files_processed']} de {status['total_files']} completados")
+                download_partial.download_button(
+                    label="Descargar resultados parciales en CSV",
+                    data=requests.get(f"http://localhost:5000/v2/export/{controller.get('desd_result_id')}").content,
+                    file_name=f"{controller.get('desd_result_id')}.csv",
+                    mime="text/csv",
+                    help="Descargar los resultados parciales en formato CSV",
+                    use_container_width=True,
+                    key="download_partial"
+                )
             else:
-                files_process.success("Procesamiento completado")
                 porcentaje.progress(1.0, "100% completado")
+                files_process.success("Procesamiento completado")
                 break
         elif status.status_code == 404:
             if error_count == 5:
@@ -93,17 +103,16 @@ if controller.get("desd_result_id"):
 
     st.info(f'Total de archivos procesados: {status["total_files"]}')
 
-    export_url = requests.get(f"http://localhost:5000/v1/export/{controller.get('desd_result_id')}").json()["url"]
     if st.download_button(
         label="Descargar resultados completos en CSV",
-        data=requests.get(f"http://localhost:5000{export_url}").content,
+        data=requests.get(f"http://localhost:5000/v2/export/{controller.get('desd_result_id')}").content,
         file_name=f"{controller.get('desd_result_id')}.csv",
         mime="text/csv",
         help="Descargar los resultados completos en formato CSV",
         use_container_width=True
     ):
         st.toast("Descargando resultados...", icon="📥")
-        requests.delete(f"http://localhost:5000/v1/export/{controller.get('desd_result_id')}")
+        requests.delete(f"http://localhost:5000/v2/export/{controller.get('desd_result_id')}")
 
     if st.button("Limpiar", help="Eliminar resultados previos", use_container_width=True):
         controller.remove("desd_result_id")
