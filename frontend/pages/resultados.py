@@ -57,7 +57,7 @@ with completed:
 
                 download_btn, delete_btn = st.columns(2)
 
-                if download_btn.button(f"📥 Descargar CSV", use_container_width=True, key=f'descargar_{resultado['result_id']}'):
+                if download_btn.button(f"📥 Descargar CSV", use_container_width=True, key=f"descargar_{resultado['result_id']}"):
                     download_csv(resultado['result_id'])  
 
                 if delete_btn.button(f"🗑 Eliminar Resultado", key=f"delete_{resultado['result_id']}", use_container_width=True):
