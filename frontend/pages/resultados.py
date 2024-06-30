@@ -100,7 +100,7 @@ with in_progress:
 
                 st.write(f"Modelos: {', '.join(modelos)}")
 
-                if st.button(f"📥 Descargar resultados parciales", help="Descargar resultados parciales en CSV", use_container_width=True):
+                if st.button(f"📥 Descargar resultados parciales", help="Descargar resultados parciales en CSV", use_container_width=True, key=f"partial_{resultado['result_id']}"):
                     download_csv(resultado['result_id'])
 
 with failed:
