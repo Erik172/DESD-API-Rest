@@ -12,6 +12,7 @@ status_ids = [status["result_id"] for status in status]
 
 for item in status:
     item['start_time'] = datetime.strptime(item['start_time'], "%Y-%m-%d %H:%M:%S")  # Ajustar el formato según sea necesario
+    item['last_updated'] = datetime.strptime(item['last_updated'], "%Y-%m-%d %H:%M:%S")  # Ajustar el formato según sea necesario
 status = sorted(status, key=lambda x: x['start_time'], reverse=True)
 
 st.subheader("Resultados auditoria")
@@ -43,7 +44,10 @@ with completed:
                 resultado_id.write(f"**{resultado['result_id']}**")
                 start_time.caption(f"**Inicio:** {resultado['start_time']}")
                 end_time.caption(f"**Fin:** {resultado['last_updated']}")
-                st.write(f"total de archivos procesados: {resultado['total_files']}")
+
+                total_files, total_time = st.columns(2)
+                total_files.write(f"total de archivos procesados: {resultado['total_files']}")
+                total_time.write(f"Tiempo transcurrido: {resultado['last_updated'] - resultado['start_time']}")
 
                 modelos = []
                 if resultado["tilted"]:
@@ -84,6 +88,8 @@ with in_progress:
 
                 st.progress(resultado["percentage"] / 100, f'{round(resultado["percentage"], 2)}% - {resultado["files_processed"]}/{resultado["total_files"]} archivos procesados')
 
+                st.write(f"Tiempo transcurrido: {resultado['last_updated'] - resultado['start_time']}")
+                
                 modelos = []
                 if resultado["tilted"]:
                     modelos.append("📐 Inclinación")
