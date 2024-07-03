@@ -62,12 +62,12 @@ def process_uploaded_images(uploaded_file):
         st.success("No se encontraron duplicados", icon="✅")
 
     with st.sidebar:
-        url = f"http://localhost:5000/v1/export/{random_id}"
-        response = requests.get(url)
-        if int(response.json()['total']) > 0:
-            st.caption(response.json()['resultado_id'])
-            st.write(f'Total de archivos duplicados: {response.json()["total"]}')
-            st.markdown(f"Descargar resultados [CSV](http://localhost:5000{response.json()['url']})")
+        st.download_button(
+            label="Descargar resultados",
+            data=f"http://localhost:5000/v2/export/{random_id}",
+            file_name="resultados.csv",
+            mime="text/csv"
+        )
 
         if st.button("Limpiar resultados", help="Presiona el botón para limpiar los resultados", use_container_width=True):
             delete = requests.delete(url)
