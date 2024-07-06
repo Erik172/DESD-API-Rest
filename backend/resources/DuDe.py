@@ -53,6 +53,8 @@ class DuDe(Resource):
         report = dude.generate_report()
 
         try:
+            if len(report) == 0:
+                report = [{"message": "No se encontraron duplicados"}]
             collection = self.db[result_id]
             collection.insert_many(report)
         except Exception as e:
