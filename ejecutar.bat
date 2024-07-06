@@ -3,6 +3,7 @@ REM Actualizar el repositorio
 cd /d %~dp0
 git fetch
 git pull
+git submodule update --init --recursive
 
 REM Iniciar MongoDB
 start "MongoDB" cmd /c "net start MongoDB"
