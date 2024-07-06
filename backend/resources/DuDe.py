@@ -1,92 +1,73 @@
 from pdf2image import convert_from_path
 from PIL import Image, ImageSequence
 from flask_restful import Resource
-from database import get_database
+from database import get_database, WorkStatus, sql_db
 from services import DuDeBase
-from datetime import datetime
 from flask import request
-import re
 import os
     
 class DuDe(Resource):
     db = get_database()
 
-    def post(self, dir_name: str) -> dict:
-        file = request.files['file']
-        if not os.path.exists(f'temp/{dir_name}'):
-            os.makedirs(f'temp/{dir_name}')
+    def post(self):
+        required_fields = ['result_id', 'files']
+        for field in required_fields:
+            if field not in request.form and field != 'files':
+                return {"message": f"No {field} provided"}, 400
+            elif field == 'files' and not request.files:
+                return {"message": "No files provided"}, 400
+            
+        result_id = request.form['result_id']
+        files = request.files.getlist('files')
 
-        if file.filename.lower().endswith('.pdf'):
-            file.save(f'temp/{dir_name}/{file.filename}')
-            images = convert_from_path(f'temp/{dir_name}/{file.filename}')
-            for i, image in enumerate(images):
-                image.save(f'temp/{dir_name}/{file.filename}__pagina_{i + 1}.png')
-            os.remove(f'temp/{dir_name}/{file.filename}')
+        work_status = WorkStatus(
+            result_id=result_id, 
+            total_files=len(files), 
+            status="in_progress", 
+            duplicate=True
+        )
+        sql_db.session.add(work_status)
+        sql_db.session.commit()
 
-        elif file.filename.lower().endswith(('.tiff', '.tif')):
-            tiff_image = Image.open(file)
-            for i, page in enumerate(ImageSequence.Iterator(tiff_image)):
-                jpg_file_path = f"temp/{dir_name}/{file.filename}__pagina_{i + 1}.jpg"
-                page.save(jpg_file_path, "JPEG")
-        else:
-            file.save(f'temp/{dir_name}/{file.filename}')
+        if not os.path.exists(f'temp/{result_id}'):
+            os.makedirs(f'temp/{result_id}')
 
-        return {"message": f"Archivo {file.filename} guardado exitosamente."}, 200
-    
-    def get(self, dir_name: str) -> dict:
-        start_time = datetime.now()
-        dude = DuDeBase(f'temp/{dir_name}')
+        for file in files:
+            if file.filename.lower().endswith('.pdf'):
+                file.save(f'temp/{result_id}/{file.filename}')
+                images = convert_from_path(f'temp/{result_id}/{file.filename}', thread_count=os.cpu_count())
+                for i, image in enumerate(images):
+                    image.save(f'temp/{result_id}/{file.filename}__pagina_{i + 1}.png')
+                os.remove(f'temp/{result_id}/{file.filename}')
+
+            elif file.filename.lower().endswith(('.tiff', '.tif')):
+                tiff_image = Image.open(file)
+                for i, page in enumerate(ImageSequence.Iterator(tiff_image)):
+                    jpg_file_path = f"temp/{result_id}/{file.filename}__pagina_{i + 1}.jpg"
+                    page.save(jpg_file_path, "JPEG")
+            else:
+                file.save(f'temp/{result_id}/{file.filename}')
+
+        dude = DuDeBase(f'temp/{result_id}')
         dude.find_duplicates()
-        stop_time = datetime.now()
+        report = dude.generate_report()
 
-        for key, value in dude.get_duplicates().items():
-            num_of_duplicates = len(value)
-            page_number = self._extract_page_number(key)
-            if page_number is not None:
-                filename = key.replace(f'__pagina_{page_number}.png', '').replace(f'__pagina_{page_number}.jpg', '')
-            else:
-                filename = key
+        try:
+            collection = self.db[result_id]
+            collection.insert_many(report)
+        except Exception as e:
+            work_status.status = "failed"
+            print(f"Error al insertar en la base de datos: {e}")
 
-            document = {
-                "archivo": filename,
-                "duplicados": num_of_duplicates
-            }
+        # delete all files
+        for file in os.listdir(f'temp/{result_id}'):
+            os.remove(f'temp/{result_id}/{file}')
+        os.rmdir(f'temp/{result_id}')
 
-            if page_number is not None:
-                document["pagina"] = page_number
-            else:
-                document["pagina"] = None
+        work_status.status = "completed" if work_status.status != "failed" else "failed"
+        work_status.total_files = len(files)
+        sql_db.session.commit()
 
-            for i, duplicate in enumerate(value):
-                pege_number = self._extract_page_number(duplicate)
-                if page_number is not None:
-                    filename = duplicate.replace(f'__pagina_{pege_number}.png', '').replace(f'__pagina_{pege_number}.jpg', '')
-                    document[f"duplicado[{i + 1}]"] = filename
-                    document[f"duplicado[{i + 1}]_pagina"] = pege_number
-                else:
-                    document[f"duplicado[{i + 1}]"] = duplicate
-
-            try:
-                collection = self.db[dir_name]
-                collection.insert_one(document)
-            except Exception as e:
-                print(f"Error al insertar en la base de datos: {e}")
-        
-        return {"duplicados": dude.get_duplicates(), "tiempo(s)": f"{(stop_time - start_time).total_seconds()}"}
+        return {"duplicados": dude.get_duplicates()}, 200
     
-    def delete(self, dir_name: str) -> dict:
-        if os.path.exists(f'temp/{dir_name}'):
-            try:
-                for file in os.listdir(f'temp/{dir_name}'):
-                    os.remove(f'temp/{dir_name}/{file}')
-                os.rmdir(f'temp/{dir_name}')
-            except Exception as e:
-                return {"message": f"Error al eliminar archivos: {e}"}, 500
-
-            return {"message": "Archivos eliminados exitosamente."}, 200
-
-        return {"message": "No se encontraron archivos para eliminar."}, 404
-
-    def _extract_page_number(self, filename: str) -> int:
-        match = re.search(r'__pagina_(\d+)', filename)
-        return int(match.group(1)) if match else None
+    

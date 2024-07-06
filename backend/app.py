@@ -6,7 +6,7 @@ from database import sql_db
 from resources import (
     DuDe,
     DESD,
-    DESDStatus,
+    Status,
     Resultados,
     Export,
 )
@@ -23,11 +23,12 @@ with app.app_context():
 
 api.add_resource(Resultados, "/v1/resultados", "/v1/resultados/<string:collection_name>", endpoint="resultados")
 api.add_resource(Export, "/v2/export/<string:resultado_id>", endpoint="export")
+api.add_resource(Status, "/v2/status", "/v2/status/<string:result_id>", endpoint="status")
 
-api.add_resource(DuDe, "/v1/dude/<string:dir_name>", endpoint="dude")
+api.add_resource(DuDe, "/v2/dude", endpoint="dude")
 
 api.add_resource(DESD, "/v2/desd", endpoint="desd")
-api.add_resource(DESDStatus, "/v2/desd/status", "/v2/desd/status/<string:result_id>", endpoint="desd_status")
+
 
 @app.route("/v2/generate_id")
 def generate_id():

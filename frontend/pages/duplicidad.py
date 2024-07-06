@@ -1,84 +1,84 @@
 from streamlit_cookies_controller import CookieController
-from datetime import datetime
 import streamlit as st
-import requests
 import threading
+import requests
 import time
 
 controller = CookieController()
 
 st.logo("https://procesosyservicios.net.co/wp-content/uploads/2019/10/LETRA-GRIS.png")
 
-# st.warning("🚧 Pagina en actualizacion a V2 🚧")
 st.title("DuDe (Duplicate Detection) Detección de duplicados 2️⃣")
-st.caption("V1.0 - Estable, con alta precisión 📊")
+st.caption("V2.0 - Estable, con alta precisión 📊")
 
-st.warning("⚠️ **Advertencia:** No cambiar, cerrar o recargar la página mientras se procesan los archivos. ⚠️")
 uploaded_file = st.file_uploader("Subir Archivos", type=["jpg", "jpeg", "png", "tif", "tiff", "pdf"], accept_multiple_files=True)
 
+def work_status(result_id):
+    url = f"http://localhost:5000/v2/status/{result_id}"
+    response = requests.get(url)
+    return response
 
 def process_uploaded_images(uploaded_file):
     random_id = requests.get("http://localhost:5000/v2/generate_id").json()["random_id"]
+    controller.set("dude_result_id", random_id)
     st.success(f"Identificador de resultados: **{random_id}**", icon="📄")
     st.info(f"Procesando **{len(uploaded_file)}** archivos... 🔄")
-
-    with st.spinner(f"subiendo {len(uploaded_file)} imágenes..."):
-        bar_progress = st.progress(0, text="Subiendo archivos...")
-        url = f"http://localhost:5000/v1/dude/{random_id}"
-        for file in uploaded_file:
-            bar_progress.progress(uploaded_file.index(file) / len(uploaded_file), f"Subiendo {uploaded_file.index(file) + 1}/{len(uploaded_file)} archivos...")     
-            response = requests.post(url, files={"file": file})
-            st.toast(response.json()["message"], icon="🎈")
-        bar_progress.progress(100, "Subida de archivos completada 🎈")
         
-    with st.spinner("Buscando duplicados..."):
-        start_time = datetime.now()
-        url = f"http://localhost:5000/v1/dude/{random_id}"
-        response = requests.get(url).json()
-        end_time = datetime.now()
-        elapsed_time = end_time - start_time
-        elapsed_seconds = elapsed_time.total_seconds()
-        if elapsed_seconds <= 60:
-            st.success(f"Tiempo transcurrido: {elapsed_seconds} segundos")
-        elif elapsed_seconds <= 3600:
-            elapsed_minutes = elapsed_seconds / 60
-            st.success(f"Tiempo transcurrido: {elapsed_minutes} minutos")
+    url = 'http://localhost:5000/v2/dude'
+    files = [('files', (file.name, file, file.type)) for file in uploaded_file]
+    threading.Thread(target=requests.post, args=(url,), kwargs={"files": files, "data": {"result_id": str(random_id)}}).start()
+    st.caption("Procesando archivos...")
+    time.sleep(3)
+
+
+if st.button("Buscar Duplicados", help="Presiona el botón para procesar los archivos cargados", use_container_width=True):
+    if uploaded_file:
+        process_uploaded_images(uploaded_file)
+
+if controller.get("dude_result_id"):
+    st.subheader(f"Estado de ({controller.get('dude_result_id')})")
+    porcentaje = st.empty()
+    files_process = st.empty()
+    data = st.empty()
+    error_count = 0
+    download_partial = st.empty()
+    while True:
+        status = work_status(controller.get("dude_result_id"))
+        if status.status_code == 200:
+            status = status.json()
+            if status["status"] == "in_progress":
+                porcentaje.progress(float(status["percentage"]) / 100.0, f'{round(status["percentage"], 1)}% - {status["files_processed"]} / {status["total_files"]} completados')
+                files_process.info(f"Procesando archivos...   {status['files_processed']} de {status['total_files']} completados")
+            else:
+                download_partial.empty()
+                porcentaje.progress(1.0, "100% completado")
+                files_process.success("Procesamiento completado")
+                break
+        elif status.status_code == 404:
+            controller.remove("dude_result_id")
+            break
+
         else:
-            elapsed_hours = elapsed_seconds / 3600
-            st.success(f"Tiempo transcurrido: {elapsed_hours} horas")
+            files_process.error("Error al obtener los resultados")
+            st.rerun()
+            break
 
-    delete = requests.delete(url)
-    st.toast(delete.json()["message"], icon="☁️")
-    if response.get('duplicados'):
-        duplicates = response.get('duplicados')
-        st.warning(f":warning: {len(duplicates)} archivos con duplicados encontrados")
-        for key, value in duplicates.items():
-            with st.expander(f"Archivo: {key}"):
-                st.write(f'Numero de duplicados: {len(value)}')
-                for i, duplicate in enumerate(value):
-                    st.write(f'{i + 1}. {duplicate}')
+    try:
+        st.info(f'Total de archivos procesados: {status["total_files"]}')
 
-    else:
-        st.success("No se encontraron duplicados", icon="✅")
+        if st.download_button(
+            label="Descargar resultados completos en CSV",
+            data=requests.get(f"http://localhost:5000/v2/export/{controller.get('dude_result_id')}").content,
+            file_name=f"{controller.get('dude_result_id')}.csv",
+            mime="text/csv",
+            help="Descargar los resultados completos en formato CSV",
+            use_container_width=True
+        ):
+            st.toast("Descargando resultados...", icon="📥")
+            requests.delete(f"http://localhost:5000/v2/export/{controller.get('dude_result_id')}")
+    except:
+        pass
 
-    with st.sidebar:
-        st.download_button(
-            label="Descargar resultados",
-            data=f"http://localhost:5000/v2/export/{random_id}",
-            file_name="resultados.csv",
-            mime="text/csv"
-        )
-
-        if st.button("Limpiar resultados", help="Presiona el botón para limpiar los resultados", use_container_width=True):
-            delete = requests.delete(url)
-            st.toast(delete.json()["status"], icon="🧹")
-            st.clear_cache()
-            st.experimental_rerun()
-
-def main():
-    if st.button("Buscar Duplicados", help="Presiona el botón para procesar los archivos cargados", use_container_width=True):
-        if uploaded_file:
-            process_uploaded_images(uploaded_file)
-
-if __name__ == "__main__":
-    main()
+    if st.button("Limpiar", help="Eliminar resultados previos", use_container_width=True):
+        controller.remove("dude_result_id")
+        st.rerun()

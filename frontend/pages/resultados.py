@@ -5,17 +5,15 @@ from datetime import datetime
 st.logo("https://procesosyservicios.net.co/wp-content/uploads/2019/10/LETRA-GRIS.png")
 
 st.title("Resultados 📁")
-st.caption("V1.1 Beta - En desarrollo 🚧")
+st.caption("V1.5 - Todo en un solo lugar 📊")
 
-status = requests.get("http://localhost:5000/v2/desd/status").json()
+status = requests.get("http://localhost:5000/v2/status").json()
 status_ids = [status["result_id"] for status in status]
 
 for item in status:
     item['start_time'] = datetime.strptime(item['start_time'], "%Y-%m-%d %H:%M:%S")  # Ajustar el formato según sea necesario
     item['last_updated'] = datetime.strptime(item['last_updated'], "%Y-%m-%d %H:%M:%S")  # Ajustar el formato según sea necesario
 status = sorted(status, key=lambda x: x['start_time'], reverse=True)
-
-st.subheader("Resultados auditoria")
 
 completed, in_progress, failed = st.tabs(["Completados", "En progreso", "Fallidos"])
 
@@ -56,6 +54,8 @@ with completed:
                     modelos.append("🔄 Rotación")
                 if resultado["cut_information"]:
                     modelos.append("✂ Corte información")
+                if resultado["duplicate"]:
+                    modelos.append("2️⃣ Duplicados")
 
                 st.write(f"Modelos: {', '.join(modelos)}")
 
@@ -65,7 +65,7 @@ with completed:
                     download_csv(resultado['result_id'])  
 
                 if delete_btn.button(f"🗑 Eliminar Resultado", key=f"delete_{resultado['result_id']}", use_container_width=True):
-                    requests.delete(f"http://localhost:5000/v2/desd/status/{resultado['result_id']}")
+                    requests.delete(f"http://localhost:5000/v2/status/{resultado['result_id']}")
                     requests.delete(f"http://localhost:5000/v1/resultados/{resultado['result_id']}")
                     requests.delete(f"http://localhost:5000/v2/export/{resultado['result_id']}")
                     st.success(f"Resultado {resultado['result_id']} eliminado con éxito.")
@@ -97,6 +97,8 @@ with in_progress:
                     modelos.append("🔄 Rotación")
                 if resultado["cut_information"]:
                     modelos.append("✂ Corte información")
+                if resultado["duplicate"]:
+                    modelos.append("2️⃣ Duplicados")
 
                 st.write(f"Modelos: {', '.join(modelos)}")
 
@@ -106,38 +108,26 @@ with in_progress:
 with failed:
     failed_results = [status for status in status if status["status"] == "failed"]
     if not failed_results:
-        st.warning("🚧 implemetacion en desarrollo 🚧")
+        st.info("No hay resultados fallidos.")
     else:
-        st.write(f'Total de resultados: {len(failed_results)}')
-        st.warning("🚧 implemetacion en desarrollo 🚧")
+        st.write(f'Total de resultados fallidos: {len(failed_results)}')
+        
+        for resultado in failed_results:
+            with st.container(border=True):
+                resultado_id, start_time, last_updated = st.columns(3)
+                resultado_id.write(f"**{resultado['result_id']}**")
+                start_time.caption(f"**Inicio:** {resultado['start_time']}")
+                last_updated.caption(f"**Última actualización:** {resultado['last_updated']}")
 
-st.subheader("Resultados Detección Duplicados")
+                st.warning(f"El resultado falló en su procesamiento. archivos procesados: {resultado['files_processed']} de {resultado['total_files']}")
 
-all_resultados = requests.get("http://localhost:5000/v1/resultados").json()
-other_resultados = []
+                delete_btn = st.empty()
 
-for item in all_resultados:
-    if item not in status_ids:
-        other_resultados.append(item)
-
-if not other_resultados:
-    st.info("No hay resultados de detección de duplicados aún.")
-else:
-    st.write(f'Total de resultados: {len(other_resultados)}')
-
-    for resultado in other_resultados:
-        with st.container(border=True):
-            st.write(f"**{resultado}**")
-
-            download_btn, delete_btn = st.columns(2)
-
-            if download_btn.button(f"📥 Descargar CSV", help="Descargar los resultados completos en formato CSV", use_container_width=True, key=f"download_{resultado}"):
-                download_csv(resultado)
-
-            if delete_btn.button(f"🗑 Eliminar Resultado", key=f"delete_{resultado}", use_container_width=True):
-                    requests.delete(f"http://localhost:5000/v2/desd/status/{resultado}")
-                    requests.delete(f"http://localhost:5000/v1/resultados/{resultado}")
-                    requests.delete(f"http://localhost:5000/v2/export/{resultado}")
-                    st.success(f"Resultado {resultado} eliminado con éxito.")
+                if delete_btn.button(f"🗑 Eliminar Resultado", key=f"delete_{resultado['result_id']}", use_container_width=True):
+                    requests.delete(f"http://localhost:5000/v2/status/{resultado['result_id']}")
+                    requests.delete(f"http://localhost:5000/v1/resultados/{resultado['result_id']}")
+                    requests.delete(f"http://localhost:5000/v2/export/{resultado['result_id']}")
+                    st.success(f"Resultado {resultado['result_id']} eliminado con éxito.")
                     st.toast("Resultado eliminado con éxito.", icon="✅")
                     st.rerun()
+

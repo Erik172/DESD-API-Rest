@@ -2,7 +2,6 @@ from streamlit_cookies_controller import CookieController
 import streamlit as st
 import requests
 import threading
-import random
 import time 
 
 st.set_page_config(
@@ -29,7 +28,7 @@ models = st.multiselect(
 uploaded_file = st.file_uploader("Subir Archivos", type=["jpg", "jpeg", "png", "tif", "tiff", "pdf"], accept_multiple_files=True)
 
 def work_status(result_id):
-    url = f"http://localhost:5000/v2/desd/status/{result_id}"
+    url = f"http://localhost:5000/v2/status/{result_id}"
     response = requests.get(url)
     return response
 
@@ -74,15 +73,6 @@ if controller.get("desd_result_id"):
             if status["status"] == "in_progress":
                 porcentaje.progress(float(status["percentage"]) / 100.0, f'{round(status["percentage"], 1)}% - {status["files_processed"]} / {status["total_files"]} completados')
                 files_process.info(f"Procesando archivos...   {status['files_processed']} de {status['total_files']} completados")
-                # download_partial.download_button(
-                #     label="Descargar resultados parciales en CSV",
-                #     data=requests.get(f"http://localhost:5000/v2/export/{controller.get('desd_result_id')}").content,
-                #     file_name=f"{controller.get('desd_result_id')}.csv",
-                #     mime="text/csv",
-                #     help="Descargar los resultados parciales en formato CSV",
-                #     use_container_width=True,
-                #     key=f"download_partial_{random.randint(0, 1000)}"
-                # )
             else:
                 download_partial.empty()
                 porcentaje.progress(1.0, "100% completado")
