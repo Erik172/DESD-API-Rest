@@ -15,3 +15,6 @@ temp/*/*.png
 temp/*/*.pdf
 
 models/customTrOCR/
+
+migrations/
+instance/

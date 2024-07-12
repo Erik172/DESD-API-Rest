@@ -5,6 +5,8 @@ data/
 backend/resources/*.png
 frontend/temp/*.jpg
 backend/temp/*.jpg
+backend/migrations/
+
 
 ### Flask ###
 instance/*
