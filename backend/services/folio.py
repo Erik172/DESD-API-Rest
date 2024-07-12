@@ -1,25 +1,28 @@
 from transformers import TrOCRProcessor, VisionEncoderDecoderModel
 from pdf2image import convert_from_path, convert_from_bytes
 from database import WorkStatus, sql_db
+from dotenv import load_dotenv
 from ultralytics import YOLO
 from PIL import Image
 import pandas as pd
 import pytesseract
-import requests
+import cohere
 import json
 import os
+
+load_dotenv()
 
 class FolioDetector:
     def __init__(self):
         self.model_yolo = YOLO('models/folio-detectV1.pt')
         self.processor = TrOCRProcessor.from_pretrained("microsoft/trocr-base-printed")
-        # self.trocr_model = VisionEncoderDecoderModel.from_pretrained("microsoft/trocr-base-printed")
         self.trocr_model = VisionEncoderDecoderModel.from_pretrained("models/customTrOCR/")
-        self.report = pd.DataFrame(columns=['pagina', 'folio', 'reverso'])
+        self.report = pd.DataFrame(columns=['pagina', 'folio', 'reverso', 'tokens'])
         self.page = 1
         self.text1 = None
         self.text2 = None
         self.filename = None
+        self.client = cohere.Client(api_key=os.getenv('COHERE_API_KEY'))
 
     def detect_folio(self, pdf_file: str | bytes, result_id: str):
         work_status = WorkStatus.query.filter_by(result_id=result_id).first()
@@ -35,6 +38,7 @@ class FolioDetector:
 
         for i, page in enumerate(pages):
             is_reverse = None
+            tokens = 0
             work_status.files_processed += 1
             work_status.percentage = work_status.files_processed / work_status.total_files * 100
             sql_db.session.commit()
@@ -46,17 +50,17 @@ class FolioDetector:
                 folio_image = self._crop_folio(page, folio_box)
                 folio_text = self._ocr_folio(folio_image)
 
-            if folio_text is None and self.page < i:
+            if folio_text is None and self.text1 is not None:
                 self.text2 = pytesseract.image_to_string(page)
-                is_reverse = self._is_reverse(self.text1, self.text2)
+                is_reverse, tokens = self._is_reverse(self.text1, self.text2)
 
             self.text1 = pytesseract.image_to_string(page)
             
             self.page += 1
-            self.report = pd.concat([self.report, pd.DataFrame({'pagina': [i + 1], 'folio': [folio_text], 'reverso': [is_reverse]})], ignore_index=True)
+            self.report = pd.concat([self.report, pd.DataFrame({'pagina': [i + 1], 'folio': [folio_text], 'reverso': [is_reverse], 'tokens': [tokens]})], ignore_index=True)
 
         self.report['archivo'] = self.filename
-        self.save_report('report.csv')
+        # self.save_report('report.csv')
 
     def _yolo_detect(self, image: Image.Image) -> dict | None:
         result = self.model_yolo(image)[0].tojson()
@@ -86,23 +90,28 @@ class FolioDetector:
         
         return folio_text
 
-    def _is_reverse(self, text1: str, text2: str, model: str = 'llama3') -> str:
+    def _is_reverse(self, text1: str, text2: str) -> str:
+        # para ahorrar  tokens vamos a coger texto 1 desde la mitas hasta el final y texto 2 desde el inicio hasta la mitad
         prompt = f"""
-            Respondeme con un Si o con un No si el texto2 es el reverso del texto1 o continuacion del texto1.
             Texto1: {text1}
 
             Texto2: {text2}
         """
 
-        data = {
-            "model": model,
-            "prompt": prompt,
-            "stream": False,
-        }
+        tokens = len(prompt.split())
 
-        response = requests.post("http://localhost:11434/api/generate", json=data)
+        response = self.client.chat(
+            model='command-r',
+            preamble='Responde solo con "Sí" si el texto2 es el reverso o la continuación del texto1. De lo contrario, responde con "No".',
+            temperature=0,
+            max_tokens=10,
+            message=prompt,
+            # stream=False
+        )
 
-        return response.json()['response']
+        print(response.text)
+        return response.text, tokens
+
     
     def get_report(self):
         return self.report.to_dict(orient='records')
