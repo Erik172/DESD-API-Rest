@@ -37,6 +37,7 @@ class Status(Resource):
             "rotation": work_status.rotation,
             "cut_information": work_status.cut_information,
             "duplicate": work_status.duplicate,
+            "folio": work_status.folio,
             "start_time": work_status.start_time.strftime("%Y-%m-%d %H:%M:%S"),
             "last_updated": work_status.last_updated.strftime("%Y-%m-%d %H:%M:%S")
         }

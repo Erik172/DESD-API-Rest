@@ -9,6 +9,7 @@ from resources import (
     Status,
     Resultados,
     Export,
+    Folio
 )
 
 app = Flask(__name__)
@@ -28,6 +29,8 @@ api.add_resource(Status, "/v2/status", "/v2/status/<string:result_id>", endpoint
 api.add_resource(DuDe, "/v2/dude", endpoint="dude")
 
 api.add_resource(DESD, "/v2/desd", endpoint="desd")
+
+api.add_resource(Folio, "/v1/folio", endpoint="folio")
 
 
 @app.route("/v2/generate_id")

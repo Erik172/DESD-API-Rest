@@ -41,26 +41,27 @@ class WorkStatus(sql_db.Model):
     rotation = sql_db.Column(sql_db.Boolean, nullable=True, default=False)
     cut_information = sql_db.Column(sql_db.Boolean, nullable=True, default=False)
     duplicate = sql_db.Column(sql_db.Boolean, nullable=True, default=False)
+    folio = sql_db.Column(sql_db.Boolean, nullable=True, default=False)
     start_time = sql_db.Column(sql_db.DateTime, nullable=True, default=sql_db.func.now())
     last_updated = sql_db.Column(sql_db.DateTime, nullable=True, default=sql_db.func.now(), onupdate=sql_db.func.now())
 
     def __repr__(self):
         return f"<WorkStatus {self.result_id}>"
     
-# class User(sql_db.Model):
-#     id = sql_db.Column(sql_db.Integer, primary_key=True, autoincrement=True)
-#     username = sql_db.Column(sql_db.String(100), nullable=False, unique=True)
-#     password = sql_db.Column(sql_db.String(100), nullable=False)
-#     email = sql_db.Column(sql_db.String(100), nullable=False)
-#     name = sql_db.Column(sql_db.String(100), nullable=False)
-#     role = sql_db.Column(sql_db.String(100), nullable=False, default="user")
+class User(sql_db.Model):
+    id = sql_db.Column(sql_db.Integer, primary_key=True, autoincrement=True)
+    username = sql_db.Column(sql_db.String(100), nullable=False, unique=True)
+    password = sql_db.Column(sql_db.String(100), nullable=False)
+    email = sql_db.Column(sql_db.String(100), nullable=False)
+    name = sql_db.Column(sql_db.String(100), nullable=False)
+    role = sql_db.Column(sql_db.String(100), nullable=False, default="user")
 
-#     def __repr__(self):
-#         return f"<User {self.username}>"
+    def __repr__(self):
+        return f"<User {self.username}>"
     
-# class PreAuthorization(sql_db.Model):
-#     id = sql_db.Column(sql_db.Integer, primary_key=True, autoincrement=True)
-#     email = sql_db.Column(sql_db.String(100), nullable=False)
+class PreAuthorization(sql_db.Model):
+    id = sql_db.Column(sql_db.Integer, primary_key=True, autoincrement=True)
+    email = sql_db.Column(sql_db.String(100), nullable=False)
 
-#     def __repr__(self):
-#         return f"<PreAuthorization {self.email}>"
+    def __repr__(self):
+        return f"<PreAuthorization {self.email}>"
