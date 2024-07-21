@@ -24,7 +24,7 @@ class FolioDetector:
         self.filename = None
         self.client = cohere.Client(api_key=os.getenv('COHERE_API_KEY'))
 
-    def detect_folio(self, pdf_file: str | bytes, result_id: str, reverse: bool = False) -> None:
+    def detect_folio(self, pdf_file: str | bytes, result_id: str, reverse: bool = True) -> None:
         work_status = WorkStatus.query.filter_by(result_id=result_id).first()
 
         self.filename = pdf_file.split('/')[-1]
@@ -92,6 +92,7 @@ class FolioDetector:
         return folio_text
 
     def _is_reverse(self, text1: str, text2: str) -> str:
+        import anthropic
         prompt = f"""
             Texto1: {text1}
 
@@ -100,15 +101,38 @@ class FolioDetector:
 
         tokens = len(prompt.split())
 
-        response = self.client.chat(
-            model='command-r',
-            preamble='Responde solo con "Sí" si el texto2 es el reverso o la continuación del texto1. De lo contrario, responde con "No".',
-            temperature=0,
-            max_tokens=10,
-            message=prompt,
+        # response = self.client.chat(
+        #     model='command-r',
+        #     preamble='Responde solo con "Sí" si el texto2 es el reverso o la continuación del texto1. De lo contrario, responde con "No".',
+        #     temperature=0,
+        #     max_tokens=10,
+        #     message=prompt,
+        # )
+
+        # return response.text, tokens
+
+        client_anthropic = anthropic.Anthropic(
+            api_key=os.getenv('ANTHROPIC_API_KEY'),
         )
 
-        return response.text, tokens
+        message = client_anthropic.messages.create(
+            model="claude-3-haiku-20240307",
+            max_tokens=2879,
+            temperature=0.7,
+            messages=[
+                {
+                    "role": "user",
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": f"Responde solo con 'Sí' si el texto2 es el reverso o la continuación del texto1. De lo contrario, responde con 'No'.\n\nTexto1: {text1}\n\nTexto2: {text2}"
+                        }
+                    ]
+                }
+            ]
+        )
+
+        return message.content[0].text
     
     # TODO: Cambiar a un modelo local
     def generate_summary(self, report: dict) -> str:
