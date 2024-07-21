@@ -134,7 +134,7 @@ class FolioDetector:
             ]
         )
 
-        return message.content
+        return message.content[0].text
     
     def get_report(self):
         return self.report.to_dict(orient='records')
