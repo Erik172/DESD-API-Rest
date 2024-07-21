@@ -91,7 +91,6 @@ class FolioDetector:
         return folio_text
 
     def _is_reverse(self, text1: str, text2: str) -> str:
-        # para ahorrar  tokens vamos a coger texto 1 desde la mitas hasta el final y texto 2 desde el inicio hasta la mitad
         prompt = f"""
             Texto1: {text1}
 
@@ -106,12 +105,36 @@ class FolioDetector:
             temperature=0,
             max_tokens=10,
             message=prompt,
-            # stream=False
         )
 
-        print(response.text)
         return response.text, tokens
+    
+    # TODO: Cambiar a un modelo local
+    def generate_summary(self, report: pd.DataFrame) -> str:
+        import anthropic
 
+        client_anthropic = anthropic.Anthropic(
+            api_key=os.getenv('ANTHROPIC_API_KEY'),
+        )
+
+        message = client_anthropic.messages.create(
+            model="claude-3-haiku-20240307",
+            max_tokens=2879,
+            temperature=0.7,
+            messages=[
+                {
+                    "role": "user",
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": f"Genera un resumen del siguiente conjunto de folios. El resumen debe comenzar destacando los errores en la secuencia de los números de folio y la identificación incorrecta de los reversos. Después de mencionar los errores, proporciona todos los detalles restantes de los folios.\n\nDatos:\n {report.to_string()}"
+                        }
+                    ]
+                }
+            ]
+        )
+
+        return message.content
     
     def get_report(self):
         return self.report.to_dict(orient='records')

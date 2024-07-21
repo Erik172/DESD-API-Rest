@@ -4,3 +4,4 @@ from .DESD import DESD
 from .DuDe import DuDe
 from .status import Status
 from .folio import Folio
+from .users import Users

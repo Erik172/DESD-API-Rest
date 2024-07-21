@@ -39,6 +39,8 @@ class Folio(Resource):
             work_status.total_files = len(files)
             work_status.files_processed += 1
             work_status.percentage = work_status.files_processed / work_status.total_files * 100
+            summary = folio_detector.generate_summary(folio_detector.get_report())
+            work_status.summary = summary
             sql_db.session.commit()
 
             try:
@@ -53,4 +55,4 @@ class Folio(Resource):
         work_status.status = 'completed'
         sql_db.session.commit()
             
-        return {"message": "Processing completed successfully"}, 200
+        return {"message": "Files processed successfully"}, 200

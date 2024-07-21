@@ -42,6 +42,7 @@ class WorkStatus(sql_db.Model):
     cut_information = sql_db.Column(sql_db.Boolean, nullable=True, default=False)
     duplicate = sql_db.Column(sql_db.Boolean, nullable=True, default=False)
     folio = sql_db.Column(sql_db.Boolean, nullable=True, default=False)
+    summary = sql_db.Column(sql_db.Text, nullable=True)
     start_time = sql_db.Column(sql_db.DateTime, nullable=True, default=sql_db.func.now())
     last_updated = sql_db.Column(sql_db.DateTime, nullable=True, default=sql_db.func.now(), onupdate=sql_db.func.now())
 
