@@ -24,8 +24,9 @@ class FolioDetector:
         self.filename = None
         self.client = cohere.Client(api_key=os.getenv('COHERE_API_KEY'))
 
-    def detect_folio(self, pdf_file: str | bytes, result_id: str):
+    def detect_folio(self, pdf_file: str | bytes, result_id: str, reverse: bool = False) -> None:
         work_status = WorkStatus.query.filter_by(result_id=result_id).first()
+
         self.filename = pdf_file.split('/')[-1]
 
         if isinstance(pdf_file, str):
@@ -50,7 +51,7 @@ class FolioDetector:
                 folio_image = self._crop_folio(page, folio_box)
                 folio_text = self._ocr_folio(folio_image)
 
-            if folio_text is None and self.text1 is not None:
+            if folio_text is None and self.text1 is not None and reverse == True:
                 self.text2 = pytesseract.image_to_string(page)
                 is_reverse, tokens = self._is_reverse(self.text1, self.text2)
 
