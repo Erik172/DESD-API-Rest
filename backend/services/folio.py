@@ -110,7 +110,7 @@ class FolioDetector:
         return response.text, tokens
     
     # TODO: Cambiar a un modelo local
-    def generate_summary(self, report: pd.DataFrame) -> str:
+    def generate_summary(self, report: dict) -> str:
         import anthropic
 
         client_anthropic = anthropic.Anthropic(
@@ -127,7 +127,7 @@ class FolioDetector:
                     "content": [
                         {
                             "type": "text",
-                            "text": f"Genera un resumen del siguiente conjunto de folios. El resumen debe comenzar destacando los errores en la secuencia de los números de folio y la identificación incorrecta de los reversos. Después de mencionar los errores, proporciona todos los detalles restantes de los folios.\n\nDatos:\n {report.to_string()}"
+                            "text": f"Genera un resumen del siguiente conjunto de folios. El resumen debe comenzar destacando los errores en la secuencia de los números de folio y la identificación incorrecta de los reversos. Después de mencionar los errores, proporciona todos los detalles restantes de los folios.\n\nDatos:\n {report}"
                         }
                     ]
                 }
