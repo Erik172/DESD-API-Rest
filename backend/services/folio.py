@@ -132,7 +132,7 @@ class FolioDetector:
             ]
         )
 
-        return message.content[0].text
+        return message.content[0].text, tokens
     
     # TODO: Cambiar a un modelo local
     def generate_summary(self, report: dict) -> str:
