@@ -10,7 +10,7 @@ def get_database():
     Returns:
         pymongo.database.Database: The MongoDB database object.
     """
-    client = pymongo.MongoClient("mongodb://localhost:27017/")
+    client = pymongo.MongoClient("mongodb://zer0:developer172@erik172.cloud:27017/")
     return client["DESD"]
 
 class WorkStatus(sql_db.Model):

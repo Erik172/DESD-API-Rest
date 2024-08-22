@@ -26,9 +26,13 @@ class DESD(Resource):
             elif field == 'files' and field not in request.files:
                 return {"message": "No file part in the request"}, 400
 
-        model_names = request.form.getlist('models')
+        # model_names = request.form.getlist('models')
+        model_names = request.form.get('models').split(',')
         files = request.files.getlist('files')
         result_id = request.form.get('result_id')
+
+        if sql_db.session.query(WorkStatus).filter_by(result_id=result_id).first():
+            return {"message": "Result ID already exists"}, 400
 
         work_status = self._create_work_status(result_id, len(files), model_names)
 

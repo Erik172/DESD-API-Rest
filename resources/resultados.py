@@ -9,7 +9,7 @@ class Resultados(Resource):
 
     def get(self, collection_name=None):
         if collection_name:
-            results = list(self.db[collection_name].find())
+            results = list(self.db.get_collection(collection_name).find())
             for result in results:
                 result['_id'] = str(result['_id'])
             return jsonify(results)
