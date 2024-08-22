@@ -1,5 +1,10 @@
-import pymongo
+
 from flask_sqlalchemy import SQLAlchemy
+from dotenv import load_dotenv
+import pymongo
+import os
+
+load_dotenv()
 
 sql_db = SQLAlchemy()
 
@@ -10,7 +15,7 @@ def get_database():
     Returns:
         pymongo.database.Database: The MongoDB database object.
     """
-    client = pymongo.MongoClient("mongodb://zer0:developer172@erik172.cloud:27017/")
+    client = pymongo.MongoClient(os.getenv("MONGO_URI"))
     return client["DESD"]
 
 class WorkStatus(sql_db.Model):
