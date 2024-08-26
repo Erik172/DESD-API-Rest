@@ -53,21 +53,3 @@ class WorkStatus(sql_db.Model):
 
     def __repr__(self):
         return f"<WorkStatus {self.result_id}>"
-    
-class User(sql_db.Model):
-    id = sql_db.Column(sql_db.Integer, primary_key=True, autoincrement=True)
-    username = sql_db.Column(sql_db.String(100), nullable=False, unique=True)
-    password = sql_db.Column(sql_db.String(100), nullable=False)
-    email = sql_db.Column(sql_db.String(100), nullable=False)
-    name = sql_db.Column(sql_db.String(100), nullable=False)
-    role = sql_db.Column(sql_db.String(100), nullable=False, default="user")
-
-    def __repr__(self):
-        return f"<User {self.username}>"
-    
-class PreAuthorization(sql_db.Model):
-    id = sql_db.Column(sql_db.Integer, primary_key=True, autoincrement=True)
-    email = sql_db.Column(sql_db.String(100), nullable=False)
-
-    def __repr__(self):
-        return f"<PreAuthorization {self.email}>"
