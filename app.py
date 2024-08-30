@@ -12,7 +12,6 @@ from resources import (
     Resultados,
     Export,
     Folio,
-    Users
 )
 
 load_dotenv()
@@ -37,8 +36,6 @@ api.add_resource(DuDe, "/v2/dude", endpoint="dude")
 api.add_resource(DESD, "/v2/desd", endpoint="desd")
 
 api.add_resource(Folio, "/v1/folio", endpoint="folio")
-
-api.add_resource(Users, "/v1/users", endpoint="users")
 
 
 @app.route("/v2/generate_id")
