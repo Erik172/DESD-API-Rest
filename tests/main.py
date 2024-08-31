@@ -1,4 +1,5 @@
 from locust import HttpUser, task, between
+from .generate_pdf import create_random_pdf, generate_id
 import os
 
 class APIUser(HttpUser):
@@ -17,9 +18,16 @@ class APIUser(HttpUser):
         }
 
         # Archivos a enviar
-        file_paths = [
-            r'D:\Documentos\DESD-API-Rest\tests\AliciaEnElPaisDeLasMaravillas.pdf',
-        ]
+        # file_paths = [
+        #     r'D:\Documentos\DESD-API-Rest\tests\AliciaEnElPaisDeLasMaravillas.pdf',
+        # ]
+
+        random_pdfs = [generate_id() + '.pdf' for _ in range(5)]
+
+        for pdf in random_pdfs:
+            create_random_pdf(pdf)
+
+        file_paths = random_pdfs
 
         files = []
         for file_path in file_paths:
@@ -38,6 +46,9 @@ class APIUser(HttpUser):
         # Cierra los archivos
         for _, (file_name, file) in files:
             file.close()
+
+        for pdf in random_pdfs:
+            os.remove(pdf)
 
     @task
     def check_status(self):
