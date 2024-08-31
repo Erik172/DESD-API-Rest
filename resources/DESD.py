@@ -129,5 +129,5 @@ class DESD(Resource):
     def _cleanup_file(self, file_path):
         try:
             os.remove(file_path)
-        except PermissionError:
+        except:
             print(f"Unable to remove file: {file_path}")
