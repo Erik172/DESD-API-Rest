@@ -1,24 +1,11 @@
-from flask import Flask
 from flask_restful import Api
 from flask_migrate import Migrate
+from config import create_app
 from database import sql_db
-from dotenv import load_dotenv
-import os
 
-from resources import (
-    DuDe,
-    DESD,
-    Status,
-    Resultados,
-    Export,
-    Folio,
-)
+from resources import *
 
-load_dotenv()
-
-app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv("SQLALCHEMY_DATABASE_URI")
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app = create_app()
 
 sql_db.init_app(app)
 migrate = Migrate(app, sql_db)
