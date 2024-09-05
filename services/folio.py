@@ -6,6 +6,7 @@ from ultralytics import YOLO
 from PIL import Image
 import pandas as pd
 import pytesseract
+import anthropic
 import cohere
 import json
 import os
@@ -92,7 +93,6 @@ class FolioDetector:
         return folio_text
 
     def _is_reverse(self, text1: str, text2: str) -> str:
-        import anthropic
         prompt = f"""
             Texto1: {text1}
 
@@ -100,16 +100,6 @@ class FolioDetector:
         """
 
         tokens = len(prompt.split())
-
-        # response = self.client.chat(
-        #     model='command-r',
-        #     preamble='Responde solo con "Sí" si el texto2 es el reverso o la continuación del texto1. De lo contrario, responde con "No".',
-        #     temperature=0,
-        #     max_tokens=10,
-        #     message=prompt,
-        # )
-
-        # return response.text, tokens
 
         client_anthropic = anthropic.Anthropic(
             api_key=os.getenv('ANTHROPIC_API_KEY'),
@@ -136,7 +126,6 @@ class FolioDetector:
     
     # TODO: Cambiar a un modelo local
     def generate_summary(self, report: dict) -> str:
-        import anthropic
 
         client_anthropic = anthropic.Anthropic(
             api_key=os.getenv('ANTHROPIC_API_KEY'),
