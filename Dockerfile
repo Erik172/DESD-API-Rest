@@ -14,4 +14,6 @@ RUN flask db migrate
 
 RUN flask db upgrade
 
-CMD ["python3" , "app.py"]
+EXPOSE 5000
+
+CMD ["gunicorn", "-w", "4", "-b", "0.0.0.0:5000", "wsgi:app"]
