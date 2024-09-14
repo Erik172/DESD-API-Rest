@@ -2,10 +2,15 @@ from flask_restful import Api
 from flask_migrate import Migrate
 from config import create_app
 from database import sql_db
+import os
 
 from resources import *
+from src import download_customOCR
 
 app = create_app()
+
+if not os.path.exists("models/customTrOCR/"):
+    download_customOCR()
 
 sql_db.init_app(app)
 migrate = Migrate(app, sql_db)
