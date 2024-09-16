@@ -4,18 +4,20 @@ WORKDIR /app
 
 COPY requirements.txt requirements.txt
 
-RUN pip install --no-cache-dir -r requirements.txt
+RUN apt-get update && apt-get install -y \
+    libgl1 \
+    libglib2.0-0
+
+RUN pip install -r requirements.txt
 
 COPY . .
 
-# RUN python src/download_model.py
+# RUN flask db init
 
-RUN flask db init
+# RUN flask db migrate
 
-RUN flask db migrate
-
-RUN flask db upgrade
+# RUN flask db upgrade
 
 EXPOSE 5000
 
-CMD ["gunicorn", "-w", "4", "-b", "0.0.0.0:5000", "wsgi:app"]
+CMD ["python", "app.py"]
