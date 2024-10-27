@@ -1,13 +1,11 @@
-from database import WorkStatus, sql_db
+from app.services import FolioDetector
 from flask_restful import Resource
-from services import FolioDetector
-from flask import request, jsonify
-from database import get_database
+from app.models import Status
+from flask import request
+from app import db
 import os
 
-class Folio(Resource):
-    db = get_database()
-    
+class Folio(Resource):    
     def post(self):
         required_fields = ['result_id', 'files']
         for field in required_fields:
@@ -19,7 +17,7 @@ class Folio(Resource):
         result_id = request.form['result_id']  
         files = request.files.getlist('files')
 
-        work_status = WorkStatus(
+        work_status = Status(
             result_id=result_id, 
             status='in_progress',
             total_files=len(files),
@@ -27,8 +25,8 @@ class Folio(Resource):
             percentage=0,
             folio=True,
         )
-        sql_db.session.add(work_status)
-        sql_db.session.commit()
+        db.session.add(work_status)
+        db.session.commit()
 
         for file in files:
             file.save('temp/' + file.filename)
@@ -41,18 +39,18 @@ class Folio(Resource):
             work_status.percentage = work_status.files_processed / work_status.total_files * 100
             summary = folio_detector.generate_summary(folio_detector.get_report())
             work_status.summary = summary
-            sql_db.session.commit()
+            db.session.commit()
 
             try:
                 collection = self.db[result_id]
                 collection.insert_many(folio_detector.get_report())
             except Exception as e:
                 work_status.status = 'failed'
-                sql_db.session.commit()
+                db.session.commit()
                 return {"message": "Failed to save results"}, 500
         
         work_status.total_files = len(files)
         work_status.status = 'completed'
-        sql_db.session.commit()
+        db.session.commit()
             
         return {"message": "Files processed successfully"}, 200

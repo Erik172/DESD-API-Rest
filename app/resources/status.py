@@ -1,5 +1,7 @@
-from database import WorkStatus, sql_db
+# from database import WorkStatus, sql_db
+from app.models import Status
 from flask_restful import Resource
+from app import db
 
 class Status(Resource):
     def get(self, result_id: str = None):
@@ -10,7 +12,7 @@ class Status(Resource):
             
             return self._serialize_work_status(work_status), 200
         else:
-            work_statuses = WorkStatus.query.all()
+            work_statuses = Status.query.all()
             return [self._serialize_work_status(work_status) for work_status in work_statuses], 200
     
     def delete(self, result_id: str):
@@ -18,13 +20,13 @@ class Status(Resource):
         if not work_status:
             return {"message": "Result not found"}, 404
 
-        sql_db.session.delete(work_status)
-        sql_db.session.commit()
+        db.session.delete(work_status)
+        db.session.commit()
 
         return {"message": "Result deleted successfully"}, 200
 
     def _get_work_status(self, result_id: str):
-        return WorkStatus.query.filter_by(result_id=result_id).first()
+        return Status.query.filter_by(result_id=result_id).first()
 
     def _serialize_work_status(self, work_status):
         return {

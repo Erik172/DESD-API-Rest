@@ -1,6 +1,6 @@
 from ultralytics import YOLO
 from datetime import datetime
-from src import parse_result_yolov8
+from app.src import parse_result_yolov8
 import platform
 import yaml
 

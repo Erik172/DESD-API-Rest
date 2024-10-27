@@ -1,12 +1,12 @@
 from flask_restful import Resource
 from flask import send_file
-from database import get_database
+from app.models import mongo_db
 from flask import jsonify
 import os
 
 class Export(Resource):
     def __init__(self):
-        self.db = get_database()
+        self.db = mongo_db()
 
     def get(self, resultado_id: str):
         file_name = self._all_documents_to_csv(resultado_id)

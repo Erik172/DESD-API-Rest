@@ -1,11 +1,11 @@
 from flask import request, jsonify
 from flask_restful import Resource
-from database import get_database
+from app.models import mongo_db
 from datetime import datetime
 
 class Resultados(Resource):
     def __init__(self):
-        self.db = get_database()
+        self.db = mongo_db()
 
     def get(self, collection_name=None):
         if collection_name:

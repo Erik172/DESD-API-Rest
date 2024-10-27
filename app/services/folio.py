@@ -1,9 +1,10 @@
 from transformers import TrOCRProcessor, VisionEncoderDecoderModel
 from pdf2image import convert_from_path, convert_from_bytes
-from database import WorkStatus, sql_db
+from app.models.status import Status
 from dotenv import load_dotenv
 from ultralytics import YOLO
 from PIL import Image
+from app import db
 import pandas as pd
 import pytesseract
 import anthropic
@@ -13,6 +14,7 @@ import os
 
 load_dotenv()
 
+# TODO: Cambiar implentacion, mejorar
 class FolioDetector:
     def __init__(self):
         self.model_yolo = YOLO('models/folio-detectV1.pt')
@@ -26,7 +28,7 @@ class FolioDetector:
         self.client = cohere.Client(api_key=os.getenv('COHERE_API_KEY'))
 
     def detect_folio(self, pdf_file: str | bytes, result_id: str, reverse: bool = True) -> None:
-        work_status = WorkStatus.query.filter_by(result_id=result_id).first()
+        work_status = Status.query.filter_by(result_id=result_id).first()
 
         self.filename = pdf_file.split('/')[-1]
 
@@ -36,14 +38,14 @@ class FolioDetector:
             pages = convert_from_bytes(pdf_file, thread_count=os.cpu_count())
         if len(pages) != work_status.total_files:
             work_status.total_files = len(pages)
-            sql_db.session.commit()
+            db.session.commit()
 
         for i, page in enumerate(pages):
             is_reverse = None
             tokens = 0
             work_status.files_processed += 1
             work_status.percentage = work_status.files_processed / work_status.total_files * 100
-            sql_db.session.commit()
+            db.session.commit()
 
             folio_box = self._yolo_detect(page)
             if folio_box is None:

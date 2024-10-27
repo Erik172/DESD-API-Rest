@@ -3,15 +3,16 @@ from pdf2image import convert_from_path
 from PIL import Image, ImageSequence
 from flask_restful import Resource
 from flask import request
-from src import save_results
+from app.src import save_results
 import yaml
 import os
 
-from services import ModelAI
-from database import WorkStatus, sql_db
+from app.services import ModelAI
+from app.models import Status
+from app import db
 
 
-class DESD(Resource):
+class Desd(Resource):
     def get(self):
             with open('models.yml') as file:
                 models = list(yaml.safe_load(file).keys())
@@ -31,7 +32,7 @@ class DESD(Resource):
         files = request.files.getlist('files')
         result_id = request.form.get('result_id')
 
-        if sql_db.session.query(WorkStatus).filter_by(result_id=result_id).first():
+        if db.session.query(Status).filter_by(result_id=result_id).first():
             return {"message": "Result ID already exists"}, 400
 
         work_status = self._create_work_status(result_id, len(files), model_names)
@@ -56,18 +57,18 @@ class DESD(Resource):
 
             if not save_results(results, result_id):
                 work_status.status = 'failed'
-                sql_db.session.commit()
+                db.session.commit()
                 return {"message": "Failed to save results"}, 500
 
             self._update_work_status(work_status)
 
         work_status.status = 'completed'
-        sql_db.session.commit()
+        db.session.commit()
 
         return {"message": "Processing completed successfully"}, 200
 
     def _create_work_status(self, result_id, total_files, model_names):
-        work_status = WorkStatus(
+        work_status = Status(
             result_id=result_id,
             status='in_progress',
             files_processed=0,
@@ -77,14 +78,14 @@ class DESD(Resource):
             rotation='rotacion' in model_names,
             cut_information='corte_informacion' in model_names
         )
-        sql_db.session.add(work_status)
-        sql_db.session.commit()
+        db.session.add(work_status)
+        db.session.commit()
         return work_status
 
     def _update_work_status(self, work_status):
         work_status.files_processed += 1
         work_status.percentage = (work_status.files_processed / work_status.total_files) * 100
-        sql_db.session.commit()
+        db.session.commit()
 
     def _tiff_process(self, models, results, filename, file_path):
         tiff_image = Image.open(file_path)

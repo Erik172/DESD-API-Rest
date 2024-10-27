@@ -1,30 +1,10 @@
 from datetime import datetime
-from database import get_database
+from app.models import mongo_db
 import re
 
-db = get_database()
+db = mongo_db()
 
 def parse_result_yolov8(result) -> dict:
-    """
-    Parses the result of the YOLOv8 model and returns a dictionary containing the parsed data.
-
-    Args:
-        result: The result object obtained from the YOLOv8 model.
-
-    Returns:
-        A dictionary containing the parsed data. The dictionary has the following structure:
-        {
-            'data': [
-                {
-                    'name': <class_name>,
-                    'confidence': <confidence>
-                },
-                ...
-            ]
-        }
-        where <class_name> is the name of the detected object class and <confidence> is the confidence score.
-
-    """
     verbose = result.verbose().split(',')
     result_dict = {'data': []}
     
@@ -55,16 +35,6 @@ def parse_result_yolov8(result) -> dict:
 
 #TODO: Mejorar funcion y crear tests
 def save_results(results: dict, resultado_id: str) -> bool:
-    """
-    Save the results of a prediction process to a database.
-
-    Args:
-        results (dict): A dictionary containing the prediction results.
-        resultado_id (str): The ID of the result.
-
-    Returns:
-        bool: True if the results are successfully saved, False otherwise.
-    """
     try:
         for filename in results:
             for model_name in results[filename]:

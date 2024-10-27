@@ -1,4 +1,5 @@
-from database import WorkStatus, sql_db
+from app.models import Status
+from app import db
 from PIL import Image
 import pytesseract
 import hashlib
@@ -12,7 +13,7 @@ class DuDeBase:
         self.data_dir = data_dir
         self.result_id = data_dir.split('/')[-1]
         self.list_of_files = os.listdir(data_dir)
-        self.work_status = WorkStatus.query.filter_by(result_id=self.result_id).first()
+        self.work_status = Status.query.filter_by(result_id=self.result_id).first()
 
     def _get_hash(self, text: str) -> str:
         return hashlib.md5(text.encode()).hexdigest()
@@ -24,7 +25,7 @@ class DuDeBase:
     def find_duplicates(self) -> None:
         if len(self.list_of_files) != self.work_status.total_files:
             self.work_status.total_files = len(self.list_of_files)
-            sql_db.session.commit()
+            db.session.commit()
 
         for file in self.list_of_files:
             file_path = os.path.join(self.data_dir, file)
@@ -89,5 +90,5 @@ class DuDeBase:
     def _update_work_status(self, work_status):
         work_status.files_processed += 1
         work_status.percentage = (work_status.files_processed / work_status.total_files) * 100
-        sql_db.session.commit()
+        db.session.commit()
 

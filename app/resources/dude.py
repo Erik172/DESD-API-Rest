@@ -1,14 +1,13 @@
 from pdf2image import convert_from_path
 from PIL import Image, ImageSequence
 from flask_restful import Resource
-from database import get_database, WorkStatus, sql_db
-from services import DuDeBase
+from app.services import DuDeBase
+from app.models import Status
 from flask import request
+from app import db
 import os
     
 class DuDe(Resource):
-    db = get_database()
-
     def post(self):
         required_fields = ['result_id', 'files']
         for field in required_fields:
@@ -20,14 +19,14 @@ class DuDe(Resource):
         result_id = request.form['result_id']
         files = request.files.getlist('files')
 
-        work_status = WorkStatus(
+        work_status = Status(
             result_id=result_id, 
             total_files=len(files), 
             status="in_progress", 
             duplicate=True
         )
-        sql_db.session.add(work_status)
-        sql_db.session.commit()
+        db.session.add(work_status)
+        db.session.commit()
 
         if not os.path.exists(f'temp/{result_id}'):
             os.makedirs(f'temp/{result_id}')
@@ -68,7 +67,7 @@ class DuDe(Resource):
 
         work_status.status = "completed" if work_status.status != "failed" else "failed"
         work_status.total_files = len(files)
-        sql_db.session.commit()
+        db.session.commit()
 
         return {"duplicados": dude.get_duplicates()}, 200
     

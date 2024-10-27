@@ -1,3 +1,0 @@
-rotacion: models/rodev2.5_openvino_model/RoDeV2.5.xml
-inclinacion: models/tilde_v1_openvino_model/best.xml
-corte_informacion: models/cudev1.5_openvino_model/best.xml
