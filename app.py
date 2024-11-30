@@ -1,39 +1,39 @@
-from flask_restful import Api
-from flask_migrate import Migrate
-from config import create_app
-from database import sql_db
-import os
+# from flask_restful import Api
+# from flask_migrate import Migrate
+# from config import create_app
+# from database import sql_db
+# import os
 
-from resources import *
-from src import download_customOCR
+# from resources import *
+# from src import download_customOCR
 
-app = create_app()
+# app = create_app()
 
-if not os.path.exists("models/customTrOCR/"):
-    download_customOCR()
+# if not os.path.exists("models/customTrOCR/"):
+#     download_customOCR()
 
-sql_db.init_app(app)
-migrate = Migrate(app, sql_db)
-api = Api(app)
+# sql_db.init_app(app)
+# migrate = Migrate(app, sql_db)
+# api = Api(app)
 
-with app.app_context():
-    sql_db.create_all()
+# with app.app_context():
+#     sql_db.create_all()
 
-api.add_resource(Resultados, "/v1/resultados", "/v1/resultados/<string:collection_name>", endpoint="resultados")
-api.add_resource(Export, "/v2/export/<string:resultado_id>", endpoint="export")
-api.add_resource(Status, "/v2/status", "/v2/status/<string:result_id>", endpoint="status")
+# api.add_resource(Resultados, "/v1/resultados", "/v1/resultados/<string:collection_name>", endpoint="resultados")
+# api.add_resource(Export, "/v2/export/<string:resultado_id>", endpoint="export")
+# api.add_resource(Status, "/v2/status", "/v2/status/<string:result_id>", endpoint="status")
 
-api.add_resource(DuDe, "/v2/dude", endpoint="dude")
+# api.add_resource(DuDe, "/v2/dude", endpoint="dude")
 
-api.add_resource(DESD, "/v2/desd", endpoint="desd")
+# api.add_resource(DESD, "/v2/desd", endpoint="desd")
 
-api.add_resource(Folio, "/v1/folio", endpoint="folio")
+# api.add_resource(Folio, "/v1/folio", endpoint="folio")
 
 
-@app.route("/v2/generate_id")
-def generate_id():
-    from src import generate_id
-    return {"random_id": generate_id()}, 200
+# @app.route("/v2/generate_id")
+# def generate_id():
+#     from src import generate_id
+#     return {"random_id": generate_id()}, 200
 
-if __name__ == "__main__":
-    app.run(debug=False, host="0.0.0.0", port=5000)
+# if __name__ == "__main__":
+#     app.run(debug=False, host="0.0.0.0", port=5000)

@@ -281,10 +281,12 @@ pyrightconfig.json
 
 # End of https://www.toptal.com/developers/gitignore/api/python,visualstudiocode,flask
 
+# Exported files
 exports/*.csv
 exports/*.json
 exports/*.jpg
 
+# Temporary files
 temp/*.jpg
 temp/*.png
 temp/*.json
@@ -292,12 +294,10 @@ temp/*.csv
 temp/*.tif
 temp/*.tiff
 temp/*.pdf
-
 temp/*/*.jpg
 temp/*/*.png
 temp/*/*.pdf
 
-models/customTrOCR/
-
-migrations/
-instance/
+# AI models
+app/ai_models/customTrOCR/
+app/ai_models/*.pt
