@@ -4,7 +4,8 @@ class Result(db.Model):
     __tablename__ = 'results'
     
     id = db.Column(db.Integer, primary_key=True)
-    collection_id = db.Column(db.String(250), nullable=False)
+    collection_id = db.Column(db.String(250), nullable=False, unique=True)
+    alias = db.Column(db.String(250), nullable=True)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     created_at = db.Column(db.DateTime, server_default=db.func.now())
     updated_at = db.Column(db.DateTime, server_default=db.func.now(), server_onupdate=db.func.now())

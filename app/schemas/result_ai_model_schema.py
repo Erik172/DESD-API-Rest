@@ -1,10 +1,10 @@
 from marshmallow import validates, ValidationError, fields
-from app.models import ResultAIModels, Result, AIModel
+from app.models import ResultAiModel, Result, AiModel
 from app import ma
 
-class ResultAiModelSchema(ma.SQLAlchemyAutoSchema):
+class ResultAIModelSchema(ma.SQLAlchemyAutoSchema):
     class Meta:
-        model = ResultAIModels
+        model = ResultAiModel
         load_instance = True
         include_fk = True
         ordered = True
@@ -19,5 +19,5 @@ class ResultAiModelSchema(ma.SQLAlchemyAutoSchema):
     
     @validates('ai_model_id')
     def validate_ai_model_id(self, value):
-        if not AIModel.query.get(value):
+        if not AiModel.query.get(value):
             raise ValidationError('AI Model does not exist.')

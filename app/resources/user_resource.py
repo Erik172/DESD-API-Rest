@@ -1,5 +1,5 @@
 from flask_jwt_extended import jwt_required
-from flask_jwt_extended import get_jwt_identity, current_user
+from flask_jwt_extended import current_user
 from flask_restful import Resource
 from flask import request
 from marshmallow import ValidationError
@@ -43,7 +43,7 @@ class UserResource(Resource):
         user_schema = UserSchema(many=True, exclude=['password'])
         return user_schema.dump(users), 200
         
-    @jwt_required()
+    # @jwt_required()
     def post(self):
         """
         Crea un nuevo usuario en la base de datos.
@@ -56,8 +56,8 @@ class UserResource(Resource):
             dict: Mensaje de error si el usuario actual no es administrador o si hay errores de validación.
             tuple: Datos del usuario creado y el código de estado HTTP 201 si la operación es exitosa.
         """
-        if not current_user.is_admin:
-            return {'message': 'Admin access required'}, 403
+        # if not current_user.is_admin:
+        #     return {'message': 'Admin access required'}, 403
         
         user_schema = UserSchema()
         
@@ -73,8 +73,21 @@ class UserResource(Resource):
         
         return user_schema.dump(user), 201
     
+    # TODO: Implementar el método PUT para actualizar un usuario
+    # 1. Hashear la contraseña si se proporciona en la solicitud.
     @jwt_required()
     def put(self, user_id: int) -> tuple:
+        """
+        Actualiza la información de un usuario existente.
+        Args:
+            user_id (int): El ID del usuario a actualizar.
+        Returns:
+            tuple: Un diccionario con un mensaje y un código de estado HTTP.
+                - Si el usuario no tiene permisos de administrador y no es el mismo usuario, retorna un mensaje de acceso denegado y un código 403.
+                - Si el usuario no se encuentra, retorna un mensaje de usuario no encontrado y un código 404.
+                - Si hay errores de validación en los datos proporcionados, retorna un mensaje de errores de validación y un código 400.
+                - Si la actualización es exitosa, retorna los datos del usuario actualizado y un código 200.
+        """
         if not current_user.is_admin and user_id != current_user.id:
             return {'message': 'Admin access required'}, 403
         
@@ -92,3 +105,26 @@ class UserResource(Resource):
         db.session.commit()
         
         return user_schema.dump(user), 200
+    
+    @jwt_required()
+    def delete(self, user_id: int) -> tuple:
+        """
+        Elimina un usuario de la base de datos.
+        Requiere autenticación JWT y acceso de administrador.
+        Args:
+            user_id (int): El ID del usuario a eliminar.
+        Returns:
+            tuple: Un mensaje de error y un código de estado HTTP si el usuario no es administrador o si el usuario no se encuentra.
+                Un diccionario vacío y un código de estado HTTP 204 si la eliminación es exitosa.
+        """
+        if not current_user.is_admin:
+            return {'message': 'Admin access required'}, 403
+        
+        user = User.query.get(user_id)
+        if not user:
+            return {'message': 'User not found'}, 404
+        
+        db.session.delete(user)
+        db.session.commit()
+        
+        return {}, 204

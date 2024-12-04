@@ -1,6 +1,6 @@
 from marshmallow import validates, ValidationError, fields
 from app.models import ResultStatus, ResultStatusEnum, Result
-from app.schemas import ma
+from app import ma
 
 class ResultStatusSchema(ma.SQLAlchemyAutoSchema):
     class Meta:

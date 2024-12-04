@@ -1,5 +1,7 @@
 __pycache__/
 tests/
 .venv/
-models/customTrOCR/
+app/ai_models/customTrOCR/
+app/ai_models/*.pt
+app/tests/
 .gitingore

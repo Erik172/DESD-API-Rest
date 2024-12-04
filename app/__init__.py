@@ -7,16 +7,16 @@ from flask_bcrypt import Bcrypt
 from flask_restful import Api
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager
-from flask_pymongo import PyMongo
+from pymongo import MongoClient
 
 db = SQLAlchemy()
+jwt = JWTManager()
 ma = Marshmallow()
 migrate = Migrate()
 bcrypt = Bcrypt()
-jwt = JWTManager()
-mongo = PyMongo()
+mongo = None
 
-def create_app() -> Flask:
+def create_app():
     from app.models import User
     
     app = Flask(__name__)
@@ -28,25 +28,27 @@ def create_app() -> Flask:
     migrate.init_app(app, db)
     bcrypt.init_app(app)
     jwt.init_app(app)
-    mongo.init_app(app)
     
     @app.before_request
     def create_database():
         db.create_all()
-        
+    
     @jwt.user_identity_loader
     def user_identity_lookup(user):
-        return user.id
-    
+        return str(user.id)
+
     @jwt.user_lookup_loader
     def user_lookup_callback(_jwt_header, jwt_data):
-        identity = jwt_data['sub']
+        identity = int(jwt_data['sub'])
         return User.query.filter_by(id=identity).one_or_none()
-    
+
     api = Api(app)
+    
+    global mongo
+    mongo_client = MongoClient(app.config['MONGO_URI'])
+    mongo = mongo_client['desd']
     
     from app.routes import initialize_routes
     initialize_routes(api)
     
     return app
-    

@@ -1,10 +1,10 @@
 from marshmallow import validates, ValidationError, fields
-from models.ai_model import AIModel
+from app.models import AiModel
 from app import ma
 
 class AIModelSchema(ma.SQLAlchemyAutoSchema):
     class Meta:
-        model = AIModel
+        model = AiModel
         load_instance = True
         include_fk = True
         ordered = True
@@ -18,11 +18,11 @@ class AIModelSchema(ma.SQLAlchemyAutoSchema):
     
     @validates('version')
     def validate_version(self, value):
-        if AIModel.query.filter_by(name=self.name, version=value).first():
+        if AiModel.query.filter_by(name=self.name, version=value).first():
             raise ValidationError('Model version already exists.')
 
     @validates('name')
     def validate_name(self, value):
-        if AIModel.query.filter_by(name=value).first():
+        if AiModel.query.filter_by(name=value).first():
             raise ValidationError('Model name already exists.')
         

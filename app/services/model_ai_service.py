@@ -1,22 +1,31 @@
 from ultralytics import YOLO
 from datetime import datetime
-from src import parse_result_yolov8
+from app.utils import parse_result_yolov8
 from pathlib import Path
 
 import yaml
 
 class ModelAIService:
     """
-    A service class for handling AI model predictions.
+    Clase ModelAIService para cargar y utilizar un modelo de IA YOLO para realizar predicciones en imágenes.
+    Métodos:
+        __init__(model_name: str, task: str = 'classify') -> None:
+        predict(image_path: str) -> dict:
     """
-
+    
     def __init__(self, model_name: str, task: str = 'classify') -> None:
         """
-        Initializes the ModelAIService with the specified model name and task.
-
+        Inicializa una instancia del servicio de modelo AI.
         Args:
-            model_name (str): The name of the model to load.
-            task (str): The task for the model (default is 'classify').
+            model_name (str): El nombre del modelo a cargar desde el archivo de configuración.
+            task (str, opcional): La tarea que realizará el modelo. Por defecto es 'classify'.
+        Raises:
+            FileNotFoundError: Si el archivo de configuración 'models.yml' no se encuentra.
+            ValueError: Si el modelo especificado no se encuentra en el archivo de configuración.
+        Atributos:
+            model_path (str): La ruta del modelo cargado desde el archivo de configuración.
+            model (YOLO): La instancia del modelo YOLO cargado.
+            results (dict): Un diccionario para almacenar los resultados del modelo.
         """
         config_file = Path('models.yml')
         if not config_file.exists():
@@ -34,14 +43,16 @@ class ModelAIService:
 
     def predict(self, image_path: str) -> dict:
         """
-        Predicts the output for the given image path using the model.
+        Realiza una predicción utilizando el modelo de IA en la imagen especificada.
 
         Args:
-            image_path (str): The path to the input image.
+            image_path (str): La ruta de la imagen en la que se realizará la predicción.
 
         Returns:
-            dict: A dictionary containing the prediction results, including the parsed result,
-                  execution time, and model path.
+            dict: Un diccionario que contiene los resultados de la predicción, incluyendo el tiempo de procesamiento y el modelo utilizado.
+
+        Raises:
+            RuntimeError: Si la predicción falla, se lanza una excepción con el mensaje de error correspondiente.
         """
         try:
             start_time = datetime.now()
