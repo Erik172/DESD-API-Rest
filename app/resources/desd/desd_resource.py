@@ -61,18 +61,19 @@ class DESDResource(Resource):
 
             # Procesa el archivo según su extensión
             try:
+                processed_files += 1
+                result_status.current_file = filename
+                result_status.status = ResultStatusEnum.RUNNING
+                result_status.total_files_processed = processed_files
+                result_status.last_updated_at = db.func.now()
+                db.session.commit()
+                
                 if filename.lower().endswith('.pdf'):
                     DESDProcessing().process_pdf(models, results, filename, temp_path)
                 elif filename.lower().endswith(('.tiff', '.tif')):
                     DESDProcessing().process_tiff(models, results, filename, temp_path)
                 else:
                     DESDProcessing().process_image(models, results, filename, temp_path)
-
-                processed_files += 1
-                result_status.status = ResultStatusEnum.RUNNING
-                result_status.total_files_processed = processed_files
-                result_status.last_updated_at = db.func.now()
-                db.session.commit()
 
                 # Guardar resultados en la base de datos después de procesar cada archivo
                 for model_name in results[filename]:

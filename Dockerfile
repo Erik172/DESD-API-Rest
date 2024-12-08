@@ -12,12 +12,12 @@ RUN pip install -r requirements.txt
 
 COPY . .
 
-# RUN flask db init
+RUN flask db init
 
-# RUN flask db migrate
+RUN flask db migrate
 
-# RUN flask db upgrade
+RUN flask db upgrade
 
-EXPOSE 5000
+EXPOSE 8080
 
-CMD ["python", "app.py"]
+CMD ["python", "wsgi.py"]

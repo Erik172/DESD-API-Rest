@@ -300,6 +300,5 @@ temp/*/*.pdf
 
 # AI models
 app/ai_models/customTrOCR/
-app/ai_models/*.pt
 
 app/tests/*.http

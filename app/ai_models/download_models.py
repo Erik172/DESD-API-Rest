@@ -7,7 +7,7 @@ def download_customOCR():
     url_sharing = 'https://drive.google.com/file/d/1PdYn97COqsCGUfj5-tXvfM1c9hESebp6/view?usp=sharing' 
     file_id = url_sharing.split('/')[-2]
     url = f'https://drive.google.com/uc?id={file_id}'
-    output = 'models/customTrOCR.zip'
+    output = 'app/models/customTrOCR.zip'
     
     if not os.path.exists(output):
         print('Downloading model...')

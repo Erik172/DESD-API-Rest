@@ -1,5 +1,5 @@
 from marshmallow import validates, ValidationError, fields
-from app.models import User
+from app.models import User, Result
 from app import ma
 
 class UserSchema(ma.SQLAlchemyAutoSchema):
@@ -14,7 +14,7 @@ class UserSchema(ma.SQLAlchemyAutoSchema):
     email = fields.Email(required=True, unique=True)
     password = fields.String(required=True)
     is_admin = fields.Boolean(required=False, default=False)
-    results = fields.Nested('ResultSchema', many=True, exclude=['user'])
+    results = fields.Method('get_results', dump_only=True)
     created_at = fields.DateTime(dump_only=True)
     updated_at = fields.DateTime(dump_only=True)
     
@@ -29,3 +29,9 @@ class UserSchema(ma.SQLAlchemyAutoSchema):
     def validate_is_admin(self, value):
         if value and not self.context.get('user').is_admin:
             raise ValidationError('Only admins can create admin users.')
+        
+    def get_results(self, obj):
+        from app.schemas import ResultSchema
+        results = Result.query.filter_by(user_id=obj.id).all()
+        schema = ResultSchema(many=True)
+        return schema.dump(results)

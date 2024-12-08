@@ -2,6 +2,5 @@ __pycache__/
 tests/
 .venv/
 app/ai_models/customTrOCR/
-app/ai_models/*.pt
 app/tests/
 .gitingore

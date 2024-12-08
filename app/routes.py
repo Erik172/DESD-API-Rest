@@ -3,6 +3,7 @@ from app.resources import *
 
 def initialize_routes(api: Api) -> None:
     api.add_resource(LoginResource, '/api/v1/auth/login', endpoint='login')
+    api.add_resource(MeResource, '/api/v1/auth/me', '/api/v1/users/me', endpoint='me')
     
     api.add_resource(UserResource, '/api/v1/users', '/api/v1/users/<int:user_id>', endpoint='users')
     

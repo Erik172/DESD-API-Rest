@@ -11,7 +11,7 @@ class ResultResource(Resource):
     @jwt_required()
     def get(self, result_id: str = None):
         if result_id:
-            result = Result.query.filter_by(result_id=result_id).first()
+            result = Result.query.filter_by(collection_id=result_id).first()
             if not result:
                 return {'message': 'Result not found'}, 404
             
