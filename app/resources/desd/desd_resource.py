@@ -10,6 +10,7 @@ import os
 from .desd_processing import DESDProcessing
 
 class DESDResource(Resource):
+    #TODO: Dejar de manejar los modelos en un archivo de configuración a base de datos
     @jwt_required()
     def post(self):
         required_fields = ['result_id', 'models']
@@ -26,7 +27,7 @@ class DESDResource(Resource):
         result_id = request.form.get('result_id')
         
         # Verificar y crear el resultado si es necesario
-        result = Result.query.filter_by(result_id=result_id).first()
+        result = Result.query.filter_by(collection_id=result_id).first()
         if result:
             if result.status in [ResultStatusEnum.PROCESSING, ResultStatusEnum.COMPLETED, ResultStatusEnum.ERROR]:
                 return {"message": f"The result has status {result.status}"}, 400
@@ -44,7 +45,7 @@ class DESDResource(Resource):
             db.session.add(result_status)
             db.session.commit()
 
-        models = {model: ModelAIService(model) for model in model_names if model in ['inclinacion', 'rotacion', 'corte_informacion']}
+        models = {model: ModelAIService(model) for model in model_names if model in ['inclinacion', 'rotacion', 'corte informacion']}
 
         processed_files = 0
         for file in files:

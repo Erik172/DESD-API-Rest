@@ -11,4 +11,4 @@ def initialize_routes(api: Api) -> None:
     api.add_resource(DESDResource, '/api/v1/desd', endpoint='desd')
     
     api.add_resource(ResultResource, '/api/v1/results', '/api/v1/results/<string:result_id>', endpoint='results')
-    api.add_resource(ExportResultResource, '/api/v1/results/<string:resultado_id>/export', endpoint='export_result')
+    api.add_resource(ExportResultResource, '/api/v1/results/<string:collection_name>/export', endpoint='export_result')

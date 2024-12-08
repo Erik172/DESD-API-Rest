@@ -27,6 +27,7 @@ class ModelAIService:
             model (YOLO): La instancia del modelo YOLO cargado.
             results (dict): Un diccionario para almacenar los resultados del modelo.
         """
+        #TODO: Implementar la carga de modelos desde la base de datos
         config_file = Path('models.yml')
         if not config_file.exists():
             raise FileNotFoundError(f"Configuration file '{config_file}' not found.")

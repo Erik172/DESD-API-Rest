@@ -4,6 +4,7 @@ import pytesseract
 import hashlib
 import os
 
+#TODO: Implemetar DuDe
 class DuDeBase:
     def __init__(self, data_dir: str):
         self.duplicates = {}
