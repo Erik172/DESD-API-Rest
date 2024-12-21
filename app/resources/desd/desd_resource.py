@@ -36,14 +36,27 @@ class DESDResource(Resource):
         if result:            
             result_status = ResultStatus.query.filter_by(result_id=result.id).first()
             
-            if result_status.status in [ResultStatusEnum.RUNNING]:
-                return {"message": f"The result has status {result_status.status}"}, 400
-            
-            if result_status.status == ResultStatusEnum.COMPLETED:
-                result_status.models = ','.join(model_names)
-                result_status.status = ResultStatusEnum.PENDING
-                result_status.created_at = db.func.now()
-                result_status.last_updated_at = db.func.now()
+            if result_status:
+                
+                if result_status.status in [ResultStatusEnum.RUNNING, ResultStatusEnum.PENDING]:
+                    return {"message": f"The result has status {result_status.status}"}, 400
+                
+                if result_status.status == ResultStatusEnum.COMPLETED:
+                    result_status.models = ','.join(model_names)
+                    result_status.status = ResultStatusEnum.PENDING
+                    result_status.created_at = db.func.now()
+                    result_status.last_updated_at = db.func.now()
+                    db.session.commit()
+            else:
+                result_status = ResultStatus(
+                    result_id=result.id,
+                    status=ResultStatusEnum.PENDING,
+                    total_files=len(files),
+                    total_files_processed=0,
+                    models=','.join(model_names),
+                    last_updated_at=db.func.now()
+                )
+                db.session.add(result_status)
                 db.session.commit()
         else:
             result = Result(
@@ -60,7 +73,7 @@ class DESDResource(Resource):
                 status=ResultStatusEnum.PENDING,
                 total_files=len(files),
                 total_files_processed=0,
-                model_names=','.join(model_names),
+                models=','.join(model_names),
                 last_updated_at=db.func.now()
             )
             db.session.add(result_status)
