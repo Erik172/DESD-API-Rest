@@ -13,6 +13,7 @@ class ResultStatusSchema(ma.SQLAlchemyAutoSchema):
     status = fields.Enum(ResultStatusEnum, required=True, default=ResultStatusEnum.PENDING)
     total_files = fields.Integer()
     total_files_processed = fields.Integer()
+    models = fields.String()
     current_file = fields.String()
     last_updated_at = fields.DateTime(dump_only=True)
     

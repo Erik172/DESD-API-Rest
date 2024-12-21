@@ -13,6 +13,7 @@ class ResultStatus(db.Model):
     status = db.Column(db.Enum(ResultStatusEnum), nullable=False, default=ResultStatusEnum.PENDING)
     total_files = db.Column(db.Integer, nullable=True)
     total_files_processed = db.Column(db.Integer, nullable=True)
+    models = db.Column(db.String(250), nullable=True)
     current_file = db.Column(db.String(250), nullable=True)
     last_updated_at = db.Column(db.DateTime, server_default=db.func.now(), server_onupdate=db.func.now())
     

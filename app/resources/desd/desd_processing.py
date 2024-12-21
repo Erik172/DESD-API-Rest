@@ -1,8 +1,11 @@
 from pdf2image import convert_from_path
 from PIL import Image, ImageSequence
+import tempfile
 import os
 
 class DESDProcessing:
+    temp_dir = tempfile.mkdtemp()
+    
     def process_pdf(self, models: dict, results: dict, filename: str, file_path: str):
         """
         Procesa un archivo PDF convirtiéndolo en imágenes y aplicando modelos de predicción a cada imagen.
@@ -16,19 +19,21 @@ class DESDProcessing:
         Returns:
             None: Los resultados se almacenan en el diccionario `results` proporcionado.
         """
+        
         images = convert_from_path(file_path, thread_count=os.cpu_count())
         
         for model_name, model in models.items():
             results[filename][model_name] = {}
             for i, image in enumerate(images):
-                image.save(f'temp/{filename}_{i}.png')
-                model_results = model.predict(f'temp/{filename}_{i}.png')
+                jpg_file_path = os.path.join(self.temp_dir, f"{filename}_{i}.jpg")
+                image.save(jpg_file_path, "JPEG")
+                model_results = model.predict(jpg_file_path)
                 results[filename][model_name][str(i)] = {
                     'prediccion': model_results['data'][0]['name'],
                     'confianza': model_results['data'][0]['confidence'],
                     'tiempo(s)': model_results['time']
                 }
-                self._cleanup_file(f'temp/{filename}_{i}.png')
+                self._cleanup_file(jpg_file_path)
                 
     def process_tiff(self, models: dict, results: dict, filename: str, file_path: str):
         """
@@ -47,7 +52,8 @@ class DESDProcessing:
         for model_name, model in models.items():
             results[filename][model_name] = {}
             for i, page in enumerate(ImageSequence.Iterator(tiff_image)):
-                jpg_file_path = f"temp/{filename}_{i}.jpg"
+                jpg_file_path = os.path.join(self.temp_dir, f"{filename}_{i}.jpg")
+                page = page.convert("RGB")  # Convertir a modo RGB
                 page.save(jpg_file_path, "JPEG")
                 model_results = model.predict(jpg_file_path)
                 results[filename][model_name][str(i)] = {
