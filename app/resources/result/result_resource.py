@@ -3,7 +3,7 @@ from flask_jwt_extended import jwt_required
 from flask_jwt_extended import current_user
 from flask import request
 from app import db, mongo
-from app.models import Result, ResultStatus
+from app.models import Result, ResultStatus, ResultStatusEnum
 from app.schemas import ResultSchema
 import os
 
@@ -25,11 +25,19 @@ class ResultResource(Resource):
         per_page = request.args.get('per_page', 10, type=int)
         order_by = request.args.get('order_by', 'created_at')
         order_type = request.args.get('order_type', 'desc')
+        status = request.args.get('status')
         
         query = Result.query
         
         if request.args.get('user_id'):
             query = query.filter_by(user_id=request.args.get('user_id'))
+            
+        if request.args.get('collection_id'):
+            query = query.filter_by(collection_id=request.args.get('collection_id'))
+            
+        if status:
+            if status in ResultStatusEnum.__members__:
+                query = query.join(ResultStatus, ResultStatus.result_id == Result.id).filter(ResultStatus.status == status)
             
         if order_type == 'desc':
             query = query.order_by(getattr(Result, order_by).desc())

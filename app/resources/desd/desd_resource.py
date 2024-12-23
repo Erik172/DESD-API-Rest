@@ -39,7 +39,8 @@ class DESDResource(Resource):
             if result_status:
                 
                 if result_status.status in [ResultStatusEnum.RUNNING, ResultStatusEnum.PENDING]:
-                    return {"message": f"The result has status {result_status.status}"}, 400
+                    print(f"Result {result_id} is already being processed")
+                    return {"message": f"The result has status {result_status.status}"}, 422
                 
                 if result_status.status == ResultStatusEnum.COMPLETED:
                     result_status.models = ','.join(model_names)
@@ -143,7 +144,7 @@ class DESDResource(Resource):
 
                     except Exception as e:
                         print(f"Error processing {extracted_file}: {e}")
-                        result.status = ResultStatusEnum.FAILED
+                        result_status.status = ResultStatusEnum.FAILED
                         db.session.commit()
                         return {"message": "An error occurred during processing"}, 500
                     finally:
@@ -158,7 +159,7 @@ class DESDResource(Resource):
         
         except Exception as e:
             print(f"Error processing files: {e}")
-            result.status = ResultStatusEnum.FAILED
+            result_status.status = ResultStatusEnum.FAILED
             db.session.commit()
             return {"message": "An error occurred during processing"}, 500
 
