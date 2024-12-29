@@ -1,0 +1,29 @@
+version: '3.9'
+services:
+  flask_app:
+    build: .
+    restart: always
+    ports:
+      - "8080:8080"
+    environment:
+      - SQLALCHEMY_DATABASE_URI=postgresql://postgres:password@db:5432/desd_db
+      # - SQLALCHEMY_DATABASE_URI=${SQLALCHEMY_DATABASE_URI}
+      - FLASK_SECRET_KEY=${FLASK_SECRET_KEY}
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY}
+      - MONGO_URI=${MONGO_URI}
+      - ADMIN_EMAIL=${ADMIN_EMAIL}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD}
+      - DEBUG=${DEBUG}
+
+  db:
+    image: postgres:13
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: desd_db
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:
