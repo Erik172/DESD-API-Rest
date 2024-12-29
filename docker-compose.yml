@@ -10,10 +10,14 @@ services:
       # - SQLALCHEMY_DATABASE_URI=${SQLALCHEMY_DATABASE_URI}
       - FLASK_SECRET_KEY=${FLASK_SECRET_KEY}
       - JWT_SECRET_KEY=${JWT_SECRET_KEY}
-      - MONGO_URI=${MONGO_URI}
+      # - MONGO_URI=${MONGO_URI}
+      - MONGO_URI=mongodb://root:pwd172@mongo:27017
       - ADMIN_EMAIL=${ADMIN_EMAIL}
       - ADMIN_PASSWORD=${ADMIN_PASSWORD}
       - DEBUG=${DEBUG}
+    depends_on:
+      - db
+      - mongo
 
   db:
     image: postgres:13
@@ -25,5 +29,15 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
+  mongo:
+    image: mongo:4.4
+    restart: always
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: pwd172
+    volumes:
+      - mongo_data:/data/db
+
 volumes:
   postgres_data:
+  mongo_data:

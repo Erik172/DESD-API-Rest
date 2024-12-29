@@ -60,24 +60,25 @@ class ResultResource(Resource):
     @jwt_required()
     def delete(self, result_id: str):
         result = Result.query.filter_by(collection_id=result_id).first()
-        result_status = ResultStatus.query.filter_by(result_id=result.id).first()
         if not result:
             return {'message': 'Result not found'}, 404
         
         if not current_user.is_admin and result.user_id != current_user.id:
             return {'message': 'Unauthorized'}, 401
         
+        result_status = ResultStatus.query.filter_by(result_id=result.id).all()
+        for status in result_status:
+            db.session.delete(status)
+            db.session.commit()
+                    
         try:
             os.remove(f'exports/{result_id}.csv')
         except FileNotFoundError:
             pass
         
         db.session.delete(result)
-        db.session.delete(result_status)
         db.session.commit()
         
         mongo[result_id].drop()
         
         return {'message': 'Result deleted'}, 200
-            
-    
