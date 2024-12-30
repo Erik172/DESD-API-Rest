@@ -46,6 +46,8 @@
 
 ## Endpoints
 
+![DESD UML](docs/pictures/DESD.drawio.png)
+
 ### Autenticación
 
 - **POST /api/v1/auth/login**: Inicia sesión y obtiene un token de acceso.
