@@ -1,0 +1,50 @@
+@startuml
+actor User
+participant "Flask App" as App
+participant "DESDResource" as DESD
+participant "DESDProcessing" as Processing
+participant "ModelAIService" as ModelAI
+participant "Result" as ResultModel
+participant "ResultStatus" as ResultStatusModel
+participant "MongoDB" as Mongo
+
+User -> App: POST /api/v1/desd
+App -> DESD: handle request
+DESD -> ResultModel: query result by result_id
+alt result exists
+    DESD -> ResultStatusModel: query result status
+    alt status is RUNNING or PENDING
+        DESD -> App: return error
+        App -> User: 422 Unprocessable Entity
+    else status is COMPLETED
+        DESD -> ResultStatusModel: update status to PENDING
+    end
+else result does not exist
+    DESD -> ResultModel: create new result
+    DESD -> ResultStatusModel: create new result status
+end
+DESD -> ModelAI: initialize models
+DESD -> DESD: save files to temp directory
+DESD -> Processing: process files
+alt file is PDF
+    Processing -> Processing: process_pdf()
+else file is TIFF
+    Processing -> Processing: process_tiff()
+else file is image
+    Processing -> Processing: process_image()
+end
+Processing -> ModelAI: predict()
+ModelAI -> Processing: return prediction
+Processing -> Mongo: save results
+alt processing error
+    Processing -> DESD: return error
+    DESD -> ResultStatusModel: update status to FAILED
+    DESD -> App: return error
+    App -> User: 500 Internal Server Error
+else processing success
+    Processing -> DESD: return success
+    DESD -> ResultStatusModel: update status to COMPLETED
+    DESD -> App: return success
+    App -> User: 200 OK
+end
+@enduml

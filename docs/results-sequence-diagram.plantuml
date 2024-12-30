@@ -1,0 +1,43 @@
+@startuml
+actor User
+participant "Flask App" as App
+participant "ResultResource" as Result
+participant "ResultStatus" as Status
+participant "MongoDB" as Mongo
+
+User -> App: GET /api/v1/results
+App -> Result: handle request
+Result -> Result: query results
+Result -> Status: query result status
+Status -> Result: return status
+Result -> App: return results
+App -> User: 200 OK (results)
+
+User -> App: GET /api/v1/results/{result_id}
+App -> Result: handle request
+Result -> Result: query result by result_id
+alt result exists
+    Result -> Status: query result status
+    Status -> Result: return status
+    Result -> App: return result
+    App -> User: 200 OK (result)
+else result does not exist
+    Result -> App: return error
+    App -> User: 404 Not Found
+end
+
+User -> App: DELETE /api/v1/results/{result_id}
+App -> Result: handle request
+Result -> Result: query result by result_id
+alt result exists
+    Result -> Status: query result status
+    Status -> Result: delete status
+    Result -> Mongo: delete result data
+    Mongo -> Result: data deleted
+    Result -> App: return success
+    App -> User: 200 OK (result deleted)
+else result does not exist
+    Result -> App: return error
+    App -> User: 404 Not Found
+end
+@enduml

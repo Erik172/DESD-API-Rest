@@ -57,6 +57,10 @@
     }
     ```
 
+    Auth sequence diagram:
+
+    ![Auth Sequence diagram](docs/pictures/auth-sequence-diagram.png)
+
 ### Usuarios
 
 - **GET /api/v1/users**: Obtiene todos los usuarios (requiere acceso de administrador).
@@ -92,6 +96,10 @@
       "files": [<archivo1>, <archivo2>, ...]
     }
     ```
+
+    DESD sequence diagram:
+
+    ![DESD Sequence diagram](docs/pictures/desd-sequence-diagram.png)
 
 ## Comandos útiles
 

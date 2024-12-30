@@ -1,0 +1,55 @@
+@startuml
+!define RECTANGLE class
+
+RECTANGLE WSGI {
+  +create_app()
+}
+
+RECTANGLE App {
+  +configurer_app(app)
+  +initialize_routes(api)
+}
+
+RECTANGLE Routes {
+  +initialize_routes(api)
+}
+
+RECTANGLE Resources {
+  +LoginResource
+  +MeResource
+  +UserResource
+  +AIModelResource
+  +DESDResource
+  +ResultResource
+  +ExportResultResource
+}
+
+RECTANGLE Models {
+  +User
+  +AiModel
+  +Result
+  +ResultStatus
+  +ResultAiModel
+}
+
+RECTANGLE Schemas {
+  +UserSchema
+  +AIModelSchema
+  +ResultSchema
+  +ResultStatusSchema
+  +ResultAIModelSchema
+}
+
+RECTANGLE Services {
+  +ModelAIService
+  +ResultService
+}
+
+WSGI --> App : create_app()
+App --> Routes : initialize_routes(api)
+Routes --> Resources : add_resource()
+Resources --> Models : use
+Resources --> Schemas : use
+Resources --> Services : use
+
+@enduml
