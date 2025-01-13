@@ -7,17 +7,17 @@ services:
       - "8080:8080"
     environment:
       - SQLALCHEMY_DATABASE_URI=postgresql://postgres:password@db:5432/desd_db
-      # - SQLALCHEMY_DATABASE_URI=${SQLALCHEMY_DATABASE_URI}
       - FLASK_SECRET_KEY=${FLASK_SECRET_KEY}
       - JWT_SECRET_KEY=${JWT_SECRET_KEY}
-      # - MONGO_URI=${MONGO_URI}
       - MONGO_URI=mongodb://root:pwd172@mongo:27017
+      - RQ_REDIS_URL=redis://redis:6379/0
       - ADMIN_EMAIL=${ADMIN_EMAIL}
       - ADMIN_PASSWORD=${ADMIN_PASSWORD}
       - DEBUG=${DEBUG}
     depends_on:
       - db
       - mongo
+      - redis
 
   db:
     image: postgres:13
@@ -37,6 +37,19 @@ services:
       MONGO_INITDB_ROOT_PASSWORD: pwd172
     volumes:
       - mongo_data:/data/db
+
+  redis:
+    image: "redis:alpine"
+    restart: always
+
+  worker:
+    build: .
+    command: rq worker --url redis://redis:6379/0
+    environment:
+      - RQ_WORKER_CLASS=rq.SimpleWorker
+    depends_on:
+      - redis
+    scale: 5
 
 volumes:
   postgres_data:

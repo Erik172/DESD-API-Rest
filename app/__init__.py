@@ -8,6 +8,8 @@ from flask_restful import Api
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager
 from pymongo import MongoClient
+from redis import Redis
+from rq import Queue
 
 db = SQLAlchemy()
 jwt = JWTManager()
@@ -15,6 +17,8 @@ ma = Marshmallow()
 migrate = Migrate()
 bcrypt = Bcrypt()
 mongo = None
+redis = None
+queue = None
 
 def create_app():
     from app.models import User
@@ -28,6 +32,10 @@ def create_app():
     migrate.init_app(app, db)
     bcrypt.init_app(app)
     jwt.init_app(app)
+    
+    global redis, queue
+    redis = Redis.from_url(app.config['RQ_REDIS_URL'])
+    queue = Queue(connection=redis)
     
     @app.before_request
     def create_database():

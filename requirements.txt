@@ -8,6 +8,7 @@ charset-normalizer==3.4.0
 click==8.1.7
 colorama==0.4.6
 contourpy==1.3.1
+crontab==1.0.1
 cycler==0.12.1
 dnspython==2.7.0
 filelock==3.16.1
@@ -19,8 +20,10 @@ flask-marshmallow==1.2.1
 Flask-Migrate==4.0.7
 Flask-PyMongo==2.3.0
 Flask-RESTful==0.3.10
+Flask-RQ2==18.3
 Flask-SQLAlchemy==3.1.1
 fonttools==4.55.0
+freezegun==1.5.1
 fsspec==2024.10.0
 gdown==5.2.0
 greenlet==3.1.1
@@ -52,7 +55,10 @@ python-dateutil==2.9.0.post0
 python-dotenv==1.0.1
 pytz==2024.2
 PyYAML==6.0.2
+redis==5.2.1
 requests==2.32.3
+rq==2.1.0
+rq-scheduler==0.14.0
 scipy==1.14.1
 seaborn==0.13.2
 setuptools==75.6.0

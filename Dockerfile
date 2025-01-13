@@ -17,13 +17,7 @@ RUN pip install psycopg2
 
 COPY . .
 
-COPY entrypoint.sh /app/entrypoint.sh
-
-RUN chmod +x /app/entrypoint.sh
-
 EXPOSE 8080
 
-ENTRYPOINT ["/app/entrypoint.sh"]
-
-# CMD ["gunicorn", "-w", "4", "-b", "0.0.0.0:8080", "wsgi:app"]
-CMD [ "python", "wsgi.py" ]
+CMD ["gunicorn", "-w", "4", "-b", "0.0.0.0:8080", "wsgi:app"]
+# CMD [ "python", "wsgi.py" ]
