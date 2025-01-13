@@ -28,11 +28,14 @@ class DESDProcessing:
                 jpg_file_path = os.path.join(self.temp_dir, f"{filename}_{i}.jpg")
                 image.save(jpg_file_path, "JPEG")
                 model_results = model.predict(jpg_file_path)
-                results[filename][model_name][str(i)] = {
-                    'prediccion': model_results['data'][0]['name'],
-                    'confianza': model_results['data'][0]['confidence'],
-                    'tiempo(s)': model_results['time']
-                }
+                if model_results and 'data' in model_results and model_results['data']:
+                    results[filename][model_name][str(i)] = {
+                        'prediccion': model_results['data'][0]['name'],
+                        'confianza': model_results['data'][0]['confidence'],
+                        'tiempo(s)': model_results['time']
+                    }
+                else:
+                    print(f"Model {model_name} returned no data for {jpg_file_path}")
                 self._cleanup_file(jpg_file_path)
                 
     def process_tiff(self, models: dict, results: dict, filename: str, file_path: str):
@@ -56,11 +59,16 @@ class DESDProcessing:
                 page = page.convert("RGB")  # Convertir a modo RGB
                 page.save(jpg_file_path, "JPEG")
                 model_results = model.predict(jpg_file_path)
-                results[filename][model_name][str(i)] = {
-                    'prediccion': model_results['data'][0]['name'],
-                    'confianza': model_results['data'][0]['confidence'],
-                    'tiempo(s)': model_results['time']
-                }
+                if model_results and 'data' in model_results and model_results['data']:
+                    results[filename][model_name][str(i)] = {
+                        'prediccion': model_results['data'][0]['name'],
+                        'confianza': model_results['data'][0]['confidence'],
+                        'tiempo(s)': model_results['time']
+                    }
+                
+                else:
+                    print(f"Model {model_name} returned no data for {jpg_file_path}")
+                
                 self._cleanup_file(jpg_file_path)
                 
     def process_image(self, models: dict, results: dict, filename: str, file_path: str):
@@ -78,13 +86,16 @@ class DESDProcessing:
         """
         for model_name, model in models.items():
             model_results = model.predict(file_path)
-            results[filename][model_name] = {
-                '0': {
-                    'prediccion': model_results['data'][0]['name'],
-                    'confianza': model_results['data'][0]['confidence'],
-                    'tiempo(s)': model_results['time']
+            if model_results and 'data' in model_results and model_results['data']:
+                results[filename][model_name] = {
+                    '0': {
+                        'prediccion': model_results['data'][0]['name'],
+                        'confianza': model_results['data'][0]['confidence'],
+                        'tiempo(s)': model_results['time']
+                    }
                 }
-            }
+            else:
+                print(f"Model {model_name} returned no data for {file_path}")
                 
     def _cleanup_file(self, file_path: str) -> None:
         """

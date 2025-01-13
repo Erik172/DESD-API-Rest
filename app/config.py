@@ -14,3 +14,7 @@ def configurer_app(app) -> None:
     
     # MongoDB
     app.config['MONGO_URI'] = os.getenv('MONGO_URI')
+    
+    # Redis
+    app.config['RQ_REDIS_URL'] = os.getenv('RQ_REDIS_URL', 'redis://localhost:6379/0')
+    app.config['RQ_QUEUES'] = ['default']
