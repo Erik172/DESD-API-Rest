@@ -1,0 +1,24 @@
+syntax = "proto3";
+
+// Define el paquete del servicio
+package converter;
+
+// Define el servicio de conversión
+service Converter {
+  // Define el método RPC para convertir archivos
+  rpc ConvertFile(ConvertRequest) returns (ConvertResponse);
+}
+
+// Define el mensaje de solicitud para la conversión
+message ConvertRequest {
+  // Contenido del archivo en bytes
+  bytes file_content = 1;
+  // Nombre del archivo
+  string file_name = 2;
+}
+
+// Define el mensaje de respuesta para la conversión
+message ConvertResponse {
+  // Lista de imágenes convertidas en bytes
+  repeated bytes images = 1;
+}
