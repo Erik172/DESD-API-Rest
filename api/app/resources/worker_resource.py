@@ -8,6 +8,8 @@ from app.services.database import update_result_status
 from app.utils import generate_name
 import time
 
+VALID_MODELS = {'rode', 'cude', 'tilde'}
+
 class WorkerResource(Resource):
     def post(self):
         if 'files' not in request.files:
@@ -24,6 +26,9 @@ class WorkerResource(Resource):
             abort(400, "No models provided")
             
         models = request.form.get('models').split(',') 
+        invalid_models = set(models) - VALID_MODELS
+        if invalid_models:
+            abort(400, f"Invalid models: {', '.join(invalid_models)}")
         
         result = Result.query.filter_by(collection_id=task_id).first()
         if result:

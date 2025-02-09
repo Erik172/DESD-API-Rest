@@ -21,10 +21,6 @@ def create_app():
     ma.init_app(app)
     migrate.init_app(app, db)
     
-    # @app.before_first_request
-    # def create_database():
-    #     db.create_all()
-    
     with app.app_context():
         db.create_all()
         

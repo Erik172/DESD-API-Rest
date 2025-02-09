@@ -5,8 +5,6 @@ import os
 RABBITMQ_HOST = os.getenv('RABBITMQ_HOST', 'rabbitmq')
 RABBITMQ_USER = os.getenv('RABBITMQ_USER', 'user')
 RABBITMQ_PASS = os.getenv('RABBITMQ_PASS', 'password')
-QUEUE_CUDE = 'queue_cude'
-QUEUE_RODE = 'queue_rode'
 
 def enqueue_task(task_data, queue_name):
     """Encola una tarea en la cola especificada."""

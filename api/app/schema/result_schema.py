@@ -14,7 +14,7 @@ class ResultSchema(ma.SQLAlchemyAutoSchema):
     user_id = fields.Integer(required=True)
     created_at = fields.DateTime(dump_only=True)
     updated_at = fields.DateTime(dump_only=True)
-    status = fields.Nested('ResultStatusSchema', only='name')
+    status = fields.Nested('ResultStatusSchema')
     
     @validates('user_id')
     def validate_user_id(self, value):
