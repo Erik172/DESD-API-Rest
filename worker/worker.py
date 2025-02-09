@@ -30,7 +30,7 @@ def process_file(task_id, file_path, filename, model, page):
     }
     
     # Guarda los resultados en MongoDB en la coleccion segun el task_id
-    db[f"task_{task_id}"].insert_one(data)
+    db[str(task_id)].insert_one(data)
     
     status = database_service.get_result_status(task_id)
     if status['total_files_processed'] == status['total_files']:
