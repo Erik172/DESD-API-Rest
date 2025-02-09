@@ -10,7 +10,6 @@ class UserSchema(ma.SQLAlchemyAutoSchema):
         ordered = True
         
     id = fields.Integer(dump_only=True)
-    name = fields.String(required=True)
     username = fields.String(required=True)
     password = fields.String(required=True)
     is_admin = fields.Boolean(required=False, default=False)

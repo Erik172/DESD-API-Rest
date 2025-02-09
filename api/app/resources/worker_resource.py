@@ -1,5 +1,6 @@
 from flask import request, abort
 from flask_restful import Resource
+from flask_jwt_extended import jwt_required
 from app.models import Result, ResultStatus, ResultStatusEnum
 from app import db
 from app.services.grpc import convert_file_grpc
@@ -11,6 +12,7 @@ import time
 VALID_MODELS = {'rode', 'cude', 'tilde'}
 
 class WorkerResource(Resource):
+    @jwt_required()
     def post(self):
         if 'files' not in request.files:
             abort(400, "No file part")

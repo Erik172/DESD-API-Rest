@@ -1,5 +1,6 @@
-from app import db
+from app import db, bcrypt
 from datetime import datetime
+from sqlalchemy import event
 import pytz
 
 class User(db.Model):
@@ -15,3 +16,19 @@ class User(db.Model):
 
     def __repr__(self):
         return f'<User {self.id} - {self.username}>'
+    
+    @staticmethod
+    def hash_password(password):
+        return bcrypt.generate_password_hash(password, 10).decode('utf-8')
+    
+    def check_password(self, password):
+        return bcrypt.check_password_hash(self.password, password)
+    
+@event.listens_for(User, 'before_insert')
+def receive_before_insert(mapper, connection, target):
+    target.password = User.hash_password(target.password)
+    
+@event.listens_for(User, 'before_update')
+def receive_before_update(mapper, connection, target):
+    if target.password != User.query.get(target.id).password:
+        target.password = User.hash_password(target.password)
