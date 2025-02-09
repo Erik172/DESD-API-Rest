@@ -1,15 +1,15 @@
 from flask import request, abort
 from flask_restful import Resource
-from flask_jwt_extended import jwt_required
+from flask_jwt_extended import jwt_required, get_jwt_identity
 from app.models import Result, ResultStatus, ResultStatusEnum
-from app import db
 from app.services.grpc import convert_file_grpc
 from app.services.rabbitmq import enqueue_task
 from app.services.database import update_result_status
 from app.utils import generate_name
+from app import db
 import time
 
-VALID_MODELS = {'rode', 'cude', 'tilde'}
+VALID_MODELS = {'rode', 'cude', 'tilde', 'legibility'}
 
 class WorkerResource(Resource):
     @jwt_required()
@@ -36,7 +36,7 @@ class WorkerResource(Resource):
         if result:
             abort(409, "Task ID already exists")
             
-        result = Result(collection_id=task_id, user_id=1)
+        result = Result(collection_id=task_id, user_id=get_jwt_identity())
         db.session.add(result)
         db.session.commit()
         

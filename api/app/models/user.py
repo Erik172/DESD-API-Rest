@@ -22,6 +22,7 @@ class User(db.Model):
         return bcrypt.generate_password_hash(password, 10).decode('utf-8')
     
     def check_password(self, password):
+        print(self.password, password)
         return bcrypt.check_password_hash(self.password, password)
     
 @event.listens_for(User, 'before_insert')

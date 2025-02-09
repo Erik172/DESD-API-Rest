@@ -1,4 +1,4 @@
-from flask import Flask
+from flask import Flask, request, abort
 from app.config import configurer_app
 from flask_jwt_extended import JWTManager
 from flask_sqlalchemy import SQLAlchemy
@@ -8,6 +8,7 @@ from flask_bcrypt import Bcrypt
 from flask_restful import Api
 from flask_cors import CORS
 from pymongo import MongoClient
+from app.utils import is_ip_allowed
 
 db = SQLAlchemy()
 jwt = JWTManager()
@@ -31,6 +32,16 @@ def create_app():
     
     with app.app_context():
         db.create_all()
+        
+    @app.before_request
+    def check_ip():
+        client_ip = request.remote_addr  # Obtener la IP del cliente
+        if 'X-Forwarded-For' in request.headers:
+            # Si hay un proxy, usar la primera IP en la lista
+            client_ip = request.headers.get('X-Forwarded-For').split(',')[0].strip()
+
+        if not is_ip_allowed(client_ip):
+            abort(403, description="Acceso denegado: IP no permitida.")
         
     @jwt.user_identity_loader
     def user_identity_lookup(user):
