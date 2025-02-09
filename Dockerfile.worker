@@ -1,0 +1,31 @@
+# Usar una imagen base de Python
+FROM python:3.12-slim
+
+# Establecer el directorio de trabajo
+WORKDIR /app
+
+# Instalar dependencias del sistema
+RUN apt-get update && apt-get install -y \
+    libgl1-mesa-glx \
+    libglib2.0-0 \
+    build-essential \
+    && rm -rf /var/lib/apt/lists/* 
+
+# Copiar los archivos de requisitos
+COPY worker/requirements.txt .
+
+# Instalar las dependencias
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copiar el script wait-for-it.sh
+COPY wait-for-it.sh /wait-for-it.sh
+RUN chmod +x /wait-for-it.sh
+
+# Copiar el código del worker
+# COPY worker/ .
+
+# Copiar la carpeta de modelos
+COPY models/ /models/
+
+# Comando para ejecutar el worker
+CMD ["/wait-for-it.sh", "rabbitmq:5672", "--", "python", "worker.py"]
