@@ -7,9 +7,14 @@ from app.services.rabbitmq import enqueue_task
 from app.services.database import update_result_status
 from app.utils import generate_name
 from app import db
+import zipfile
+import tempfile
 import time
+import os
 
 VALID_MODELS = {'rode', 'cude', 'tilde', 'legibility'}
+VALID_IMAGE_EXTENSIONS = {'jpg', 'jpeg', 'png'}
+VALID_DOCUMENT_EXTENSIONS = {'pdf', 'tif', 'tiff'}
 
 class WorkerResource(Resource):
     @jwt_required()
@@ -42,37 +47,60 @@ class WorkerResource(Resource):
         
         result_status = ResultStatus(
             result_id=result.id,
-            status=ResultStatusEnum.PENDING,
+            status=ResultStatusEnum.UPLOADING,
             total_files=len(files),
             models=','.join(models)
         )
         db.session.add(result_status)
         db.session.commit()
         
+        if len(files) == 1 and files[0].filename.endswith('.zip'):
+            files = self._extract_zip_file(files[0])
+        
         for i, file in enumerate(files):
             file_bytes = file.read()
             filename = file.filename.lower()
+            file_extension = os.path.splitext(filename)[1][1:].lower()
             
-            start_time = time.time()
-            images = convert_file_grpc(file_bytes, filename)
-            print(f'File {filename} converted in {time.time() - start_time} seconds')
+            if not os.path.exists(f'/shared-data/{task_id}'):
+                os.makedirs(f'/shared-data/{task_id}')
             
-            for j, image_bytes in enumerate(images):
-                image_path = f'/shared-data/{filename}_page_{j+1}.jpg'
+            if file_extension in VALID_DOCUMENT_EXTENSIONS:
+                start_time = time.time()
+                images = convert_file_grpc(file_bytes, filename)
+                print(f'File {filename} converted in {time.time() - start_time} seconds')
+                
+                for j, image_bytes in enumerate(images):  
+                    image_path = f'/shared-data/{task_id}/{filename}_page_{j+1}.jpg'
+                    with open(image_path, 'wb') as img_f:
+                        img_f.write(image_bytes)
+                    self._enqueue_tasks(image_path, filename, task_id, models, i+1, j+1)
+                    
+            elif file_extension in VALID_IMAGE_EXTENSIONS:
+                image_path = f'/shared-data/{task_id}/{filename}'
                 with open(image_path, 'wb') as img_f:
-                    img_f.write(image_bytes)
-                for model in models:
-                    task_data = {
-                        'filename': filename,
-                        'file_path': image_path,
-                        'task_id': task_id,
-                        'model_name': model,
-                        'page': j+1,
-                        'file_index': i+1
-                    }
+                    img_f.write(file_bytes)
+                self._enqueue_tasks(image_path, filename, task_id, models, i+1, 1)
                     
-                    enqueue_task(task_data, f'queue_{model}')
-                    
-        update_result_status(result_status.id, status=ResultStatusEnum.PENDING)    
+        update_result_status(result_status.id, status=ResultStatusEnum.PENDING, total_files=len(files)) 
                     
         return {"task_id": task_id}, 202
+    
+
+    def _extract_zip_file(self, zip_file):
+        with zipfile.ZipFile(zip_file, 'r') as zip_ref:
+            tmp_dir = tempfile.mkdtemp()
+            zip_ref.extractall(tmp_dir)
+            return [open(os.path.join(tmp_dir, name), 'rb') for name in zip_ref.namelist()]
+        
+    def _enqueue_tasks(self, image_path, filename, task_id, models, file_index, page_number):
+        for model in models:
+            task_data = {
+                'filename': filename,
+                'file_path': image_path,
+                'task_id': task_id,
+                'model_name': model,
+                'page': page_number,
+                'file_index': file_index
+            }
+            enqueue_task(task_data, f'queue_{model}')
