@@ -4,6 +4,7 @@ from pymongo import MongoClient
 from utils.preprocess_image import preprocess_image
 from config import Config
 from services import *
+from datetime import datetime
 
 messaging_service = MessagingService()
 inference_service = InferenceService()
@@ -34,7 +35,7 @@ def process_file(task_id, file_path, filename, model, page):
     
     status = database_service.get_result_status(task_id)
     if status['total_files_processed'] == status['total_files']:
-        database_service.update_result_status(task_id, status='COMPLETED')
+        database_service.update_result_status(task_id, status='COMPLETED', last_updated=datetime.now())
     
     print(f"Completed processing file: {file_path} with task ID: {task_id}")
 
@@ -64,7 +65,7 @@ def callback(ch, method, properties, body):
     file_index = task['file_index']
     page = task['page']
     
-    database_service.update_result_status(task_id, status='RUNNING', current_file=filename, total_files_processed=file_index)
+    database_service.update_result_status(task_id, status='RUNNING', current_file=filename, total_files_processed=file_index, last_updated=datetime.now())
     
     process_file(task_id, file_path, filename, model, page)
     ch.basic_ack(delivery_tag=method.delivery_tag)

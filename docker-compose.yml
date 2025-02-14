@@ -16,6 +16,8 @@ services:
     environment:
       MONGO_INITDB_ROOT_USERNAME: root
       MONGO_INITDB_ROOT_PASSWORD: example
+    volumes:
+      - mongodb-data:/data/db
 
   postgres:
     image: postgres
@@ -45,7 +47,7 @@ services:
       FLASK_SECRET_KEY: 4be374c60625b60ad3b571364d925c8a1191b4614844eb5137acd4b24275fa29
       JWT_SECRET_KEY: e52a1f926d451902e2a60d5e5bfe0a6667294b76f1585e86394d670cf8ac27fc
     volumes:
-      - ./api/:/app  # Montar el código fuente de la API
+      # - ./api/:/app  # Montar el código fuente de la API
       - shared-data:/shared-data  # Montar el volumen compartido
     depends_on:
       - rabbitmq
@@ -119,6 +121,26 @@ services:
       - rabbitmq
       - mongodb
 
+  worker_tilde:
+    build: 
+      context: .
+      dockerfile: Dockerfile.worker
+    environment:
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_USER: user
+      RABBITMQ_PASS: password
+      MONGO_URI: mongodb://root:example@mongodb:27017
+      QUEUE_NAME: queue_tilde
+      MODEL_ONNX_PATH: /models/tilde_v1.onnx
+      MODEL_OPENVINO_PATH: /models/tilde_v1.xml
+    volumes:
+      - ./models/tilde/:/models/
+      - shared-data:/shared-data  # Montar el volumen compartido
+    depends_on:
+      - rabbitmq
+      - mongodb
+
 volumes:
   shared-data:
   postgres-data:
+  mongodb-data:
