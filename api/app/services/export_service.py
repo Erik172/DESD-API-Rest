@@ -21,4 +21,4 @@ class ExportService:
             for document in cursor:
                 writer.writerow(document)
                 
-        return filename
+        return filepath

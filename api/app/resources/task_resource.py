@@ -1,7 +1,7 @@
-from flask import abort
+from flask import request, abort
 from flask_restful import Resource
 from flask_jwt_extended import jwt_required, get_jwt_identity
-from app.models import Result, ResultStatus
+from app.models import Result, ResultStatus, ResultStatusEnum
 from app.schema import ResultSchema
 from app import db
 
@@ -15,13 +15,33 @@ class TaskResource(Resource):
             if not result:
                 abort(404, "Task ID not found")
                 
-            if result.user_id != get_jwt_identity():
-                abort(403, "Permission denied")
+            # if result.user_id != get_jwt_identity():
+            #     abort(403, "Permission denied")
                 
             return result_schema.dump(result)
         else:
-            results = Result.query.filter_by(user_id=get_jwt_identity()).all()
-            return result_schema.dump(results, many=True)
+            order_by = request.args.get('order_by', 'desc')
+            order_type = request.args.get('order_type', 'created_at')
+            status = request.args.get('status', None)
+            
+            query = Result.query.filter_by(user_id=get_jwt_identity())
+            
+            if status:
+                if status in ResultStatusEnum.__members__:
+                    query = query.join(ResultStatus, ResultStatus.result_id == Result.id).filter(ResultStatus.status == status)
+                    
+            if order_by == 'asc':
+                query = query.order_by(getattr(Result, order_type).asc())
+            else:
+                query = query.order_by(getattr(Result, order_type).desc())
+                
+            results = query.all()
+            total_results = len(results)
+            
+            return {
+                "total_results": total_results,
+                "results": result_schema.dump(results, many=True)
+            }
     
     @jwt_required()
     def delete(self, task_id):
@@ -29,7 +49,7 @@ class TaskResource(Resource):
         if not result:
             abort(404, "Task ID not found")
             
-        if result.user_id != get_jwt_identity():
+        if int(result.user_id) != int(get_jwt_identity()):
             abort(403, "Permission denied")
             
         result_status = ResultStatus.query.filter_by(result_id=result.id).first()

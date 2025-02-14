@@ -10,9 +10,16 @@ class AllowedIPsAdminResource(Resource):
         self.allowed_ips_schema = AllowedIPsSchema()
         
     @jwt_required()
-    def get(self):
+    def get(self, allowed_ip_id=None):
         if not current_user.is_admin:
             abort(403, "Permission denied")
+            
+        if allowed_ip_id:
+            allowed_ip = AllowedIPs.query.get(allowed_ip_id)
+            if not allowed_ip:
+                abort(404, "Allowed IP not found")
+                
+            return self.allowed_ips_schema.dump(allowed_ip)
         
         allowed_ips = AllowedIPs.query.all()
         

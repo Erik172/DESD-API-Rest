@@ -38,6 +38,22 @@ class UserAdminResource(Resource):
         return user_schema.dump(user), 201
     
     @jwt_required()
+    def put(self, user_id):
+        if not current_user.is_admin:
+            abort(403, "Permission denied")
+        
+        user = User.query.get(user_id)
+        if not user:
+            abort(404, "User not found")
+        
+        user_schema = UserSchema(context={'is_admin': True})
+        user = user_schema.load(request.json, instance=user, partial=True)
+        
+        db.session.commit()
+        
+        return user_schema.dump(user)
+    
+    @jwt_required()
     def delete(self, user_id):
         if not current_user.is_admin:
             abort(403, "Permission denied")

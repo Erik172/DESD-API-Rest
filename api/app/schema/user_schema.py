@@ -25,5 +25,5 @@ class UserSchema(ma.SQLAlchemyAutoSchema):
         
     @validates('is_admin')
     def validate_is_admin(self, value):
-        if value and not self.context.get('user').is_admin:
-            raise ValidationError('Only admins can create admin users.')
+        if not self.context.get('is_admin'):
+            raise ValidationError('Permission denied.')

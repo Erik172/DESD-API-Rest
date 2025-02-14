@@ -12,4 +12,4 @@ class ExportResource(Resource):
         if not filename:
             abort(404, "Task ID not found")
             
-        return send_file(filename, as_attachment=True, mimetype='text/csv', download_name=filename)
+        return send_file(filename, as_attachment=True, mimetype='text/csv')

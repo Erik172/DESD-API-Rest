@@ -7,6 +7,7 @@ from app.services.rabbitmq import enqueue_task
 from app.services.database import update_result_status
 from app.utils import generate_name
 from app import db
+from datetime import datetime
 import zipfile
 import tempfile
 import time
@@ -15,6 +16,17 @@ import os
 VALID_MODELS = {'rode', 'cude', 'tilde', 'legibility'}
 VALID_IMAGE_EXTENSIONS = {'jpg', 'jpeg', 'png'}
 VALID_DOCUMENT_EXTENSIONS = {'pdf', 'tif', 'tiff'}
+
+class FileWithFilename:
+    def __init__(self, file, filename):
+        self.file = file
+        self.filename = filename
+
+    def read(self, *args, **kwargs):
+        return self.file.read(*args, **kwargs)
+
+    def close(self):
+        return self.file.close()
 
 class WorkerResource(Resource):
     @jwt_required()
@@ -41,7 +53,7 @@ class WorkerResource(Resource):
         if result:
             abort(409, "Task ID already exists")
             
-        result = Result(collection_id=task_id, user_id=get_jwt_identity())
+        result = Result(collection_id=task_id, user_id=get_jwt_identity(), created_at=datetime.now(), updated_at=datetime.now())
         db.session.add(result)
         db.session.commit()
         
@@ -50,12 +62,14 @@ class WorkerResource(Resource):
             status=ResultStatusEnum.UPLOADING,
             total_files=len(files),
             models=','.join(models)
+            
         )
         db.session.add(result_status)
         db.session.commit()
         
         if len(files) == 1 and files[0].filename.endswith('.zip'):
             files = self._extract_zip_file(files[0])
+            update_result_status(result_status.id, total_files=len(files), status=ResultStatusEnum.PENDING, last_updated=datetime.now())
         
         for i, file in enumerate(files):
             file_bytes = file.read()
@@ -82,7 +96,7 @@ class WorkerResource(Resource):
                     img_f.write(file_bytes)
                 self._enqueue_tasks(image_path, filename, task_id, models, i+1, 1)
                     
-        update_result_status(result_status.id, status=ResultStatusEnum.PENDING, total_files=len(files)) 
+        update_result_status(result_status.id, status=ResultStatusEnum.PENDING, total_files=len(files), last_updated=datetime.now())
                     
         return {"task_id": task_id}, 202
     
@@ -91,7 +105,7 @@ class WorkerResource(Resource):
         with zipfile.ZipFile(zip_file, 'r') as zip_ref:
             tmp_dir = tempfile.mkdtemp()
             zip_ref.extractall(tmp_dir)
-            return [open(os.path.join(tmp_dir, name), 'rb') for name in zip_ref.namelist()]
+            return [FileWithFilename(open(os.path.join(tmp_dir, name), 'rb'), name) for name in zip_ref.namelist()]
         
     def _enqueue_tasks(self, image_path, filename, task_id, models, file_index, page_number):
         for model in models:
