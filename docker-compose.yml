@@ -1,56 +1,146 @@
-version: '3.9'
+version: '3'
 services:
-  flask_app:
-    build: .
-    restart: always
+  rabbitmq:
+    image: rabbitmq:3-management
     ports:
-      - "8080:8080"
+      - "5672:5672"
+      - "15672:15672"
     environment:
-      - SQLALCHEMY_DATABASE_URI=postgresql://postgres:password@db:5432/desd_db
-      - FLASK_SECRET_KEY=${FLASK_SECRET_KEY}
-      - JWT_SECRET_KEY=${JWT_SECRET_KEY}
-      - MONGO_URI=mongodb://root:pwd172@mongo:27017
-      - RQ_REDIS_URL=redis://redis:6379/0
-      - ADMIN_EMAIL=${ADMIN_EMAIL}
-      - ADMIN_PASSWORD=${ADMIN_PASSWORD}
-      - DEBUG=${DEBUG}
-    depends_on:
-      - db
-      - mongo
-      - redis
+      RABBITMQ_DEFAULT_USER: user
+      RABBITMQ_DEFAULT_PASS: password
 
-  db:
-    image: postgres:13
-    restart: always
-    environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: password
-      POSTGRES_DB: desd_db
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-
-  mongo:
-    image: mongo:4.4
-    restart: always
+  mongodb:
+    image: mongo
+    ports:
+      - "27017:27017"
     environment:
       MONGO_INITDB_ROOT_USERNAME: root
-      MONGO_INITDB_ROOT_PASSWORD: pwd172
+      MONGO_INITDB_ROOT_PASSWORD: example
     volumes:
-      - mongo_data:/data/db
+      - mongodb-data:/data/db
 
-  redis:
-    image: "redis:alpine"
-    restart: always
-
-  worker:
-    build: .
-    command: rq worker --url redis://redis:6379/0
+  postgres:
+    image: postgres
+    ports:
+      - "5432:5432"
     environment:
-      - RQ_WORKER_CLASS=rq.SimpleWorker
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: desd
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+    ports:
+      - "5000:5000"
+    environment:
+      FLASK_ENV: development
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_USER: user
+      RABBITMQ_PASS: password
+      MONGO_URI: mongodb://root:example@mongodb:27017
+      POSTGRES_URI: postgresql://user:password@postgres:5432/tasks
+      CONVERTER_GRPC_HOST: converter:50051
+      FLASK_SECRET_KEY: 4be374c60625b60ad3b571364d925c8a1191b4614844eb5137acd4b24275fa29
+      JWT_SECRET_KEY: e52a1f926d451902e2a60d5e5bfe0a6667294b76f1585e86394d670cf8ac27fc
+    volumes:
+      # - ./api/:/app  # Montar el código fuente de la API
+      - shared-data:/shared-data  # Montar el volumen compartido
     depends_on:
-      - redis
-    scale: 5
+      - rabbitmq
+      - mongodb
+      - postgres
+      - converter
+      - worker_cude
+      - worker_rode
+
+  converter:
+    build:
+      context: .
+      dockerfile: Dockerfile.converter
+    ports:
+      - "50051:50051"
+
+  worker_cude:
+    build:
+      context: .
+      dockerfile: Dockerfile.worker
+    environment:
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_USER: user
+      RABBITMQ_PASS: password
+      MONGO_URI: mongodb://root:example@mongodb:27017
+      QUEUE_NAME: queue_cude
+      MODEL_ONNX_PATH: /models/cude_v2.onnx
+      MODEL_OPENVINO_PATH: /models/cude_v2.xml
+    volumes:
+      - ./models/cude/:/models/
+      - shared-data:/shared-data  # Montar el volumen compartido
+    depends_on:
+      - rabbitmq
+      - mongodb
+
+  worker_rode:
+    build:
+      context: .
+      dockerfile: Dockerfile.worker
+    environment:
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_USER: user
+      RABBITMQ_PASS: password
+      MONGO_URI: mongodb://root:example@mongodb:27017
+      QUEUE_NAME: queue_rode
+      MODEL_ONNX_PATH: /models/rode_v2.onnx
+      MODEL_OPENVINO_PATH: /models/rode_v2.xml
+    volumes:
+      - ./models/rode/:/models/
+      - shared-data:/shared-data  # Montar el volumen compartido
+    depends_on:
+      - rabbitmq
+      - mongodb
+
+  worker_legibility:
+    build: 
+      context: .
+      dockerfile: Dockerfile.worker
+    environment:
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_USER: user
+      RABBITMQ_PASS: password
+      MONGO_URI: mongodb://root:example@mongodb:27017
+      QUEUE_NAME: queue_legibility
+      MODEL_ONNX_PATH: /models/legibility_v1.onnx
+      MODEL_OPENVINO_PATH: /models/legibility_v1.xml
+    volumes:
+      - ./models/legibility/:/models/
+      - shared-data:/shared-data  # Montar el volumen compartido
+    depends_on:
+      - rabbitmq
+      - mongodb
+
+  worker_tilde:
+    build: 
+      context: .
+      dockerfile: Dockerfile.worker
+    environment:
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_USER: user
+      RABBITMQ_PASS: password
+      MONGO_URI: mongodb://root:example@mongodb:27017
+      QUEUE_NAME: queue_tilde
+      MODEL_ONNX_PATH: /models/tilde_v1.onnx
+      MODEL_OPENVINO_PATH: /models/tilde_v1.xml
+    volumes:
+      - ./models/tilde/:/models/
+      - shared-data:/shared-data  # Montar el volumen compartido
+    depends_on:
+      - rabbitmq
+      - mongodb
 
 volumes:
-  postgres_data:
-  mongo_data:
+  shared-data:
+  postgres-data:
+  mongodb-data:

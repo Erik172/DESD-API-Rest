@@ -1,0 +1,4 @@
+grpcio
+grpcio-tools
+pdf2image
+Pillow

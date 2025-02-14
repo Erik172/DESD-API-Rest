@@ -1,5 +1,6 @@
 __pycache__/
 .venv/
 .gitignore
-instance/
-migrations/
+docs/
+*.pyc
+*.pyo
