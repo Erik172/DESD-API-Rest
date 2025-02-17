@@ -47,7 +47,6 @@ services:
       FLASK_SECRET_KEY: 4be374c60625b60ad3b571364d925c8a1191b4614844eb5137acd4b24275fa29
       JWT_SECRET_KEY: e52a1f926d451902e2a60d5e5bfe0a6667294b76f1585e86394d670cf8ac27fc
     volumes:
-      # - ./api/:/app  # Montar el código fuente de la API
       - shared-data:/shared-data  # Montar el volumen compartido
     depends_on:
       - rabbitmq

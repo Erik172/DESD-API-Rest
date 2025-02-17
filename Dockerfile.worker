@@ -28,4 +28,5 @@ COPY worker/ .
 COPY models/ /models/
 
 # Comando para ejecutar el worker
-CMD ["/wait-for-it.sh", "rabbitmq:5672", "--", "python", "worker.py"]
+# CMD ["/wait-for-it.sh", "rabbitmq:5672", "--", "python", "worker.py"]
+CMD [ "python", "worker.py" ]

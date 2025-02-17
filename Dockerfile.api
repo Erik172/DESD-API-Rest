@@ -26,4 +26,5 @@ COPY api/ .
 EXPOSE 5000
 
 # Comando para ejecutar la API
-CMD ["/wait-for-it.sh", "rabbitmq:5672", "--", "python", "wsgi.py"]
+# CMD ["/wait-for-it.sh", "rabbitmq:5672", "--", "python", "wsgi.py"]
+CMD [ "python", "wsgi.py" ]
