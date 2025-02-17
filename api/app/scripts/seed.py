@@ -24,6 +24,7 @@ with app.app_context():
     ips = [
         AllowedIPs(ip='127.0.0.1'),
         AllowedIPs(ip='172.19.0.1'),
+        AllowedIPs(ip='172.18.0.1')
     ]
     
     db.session.add_all(ips)
