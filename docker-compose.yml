@@ -81,6 +81,7 @@ services:
     depends_on:
       - rabbitmq
       - mongodb
+      - postgres
 
   worker_rode:
     build:
@@ -100,6 +101,7 @@ services:
     depends_on:
       - rabbitmq
       - mongodb
+      - postgres
 
   worker_legibility:
     build: 
@@ -119,6 +121,7 @@ services:
     depends_on:
       - rabbitmq
       - mongodb
+      - postgres
 
   worker_tilde:
     build: 
@@ -138,6 +141,24 @@ services:
     depends_on:
       - rabbitmq
       - mongodb
+      - postgres
+
+  duplicate:
+    build: 
+      context: .
+      dockerfile: Dockerfile.duplicate
+    environment:
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_USER: user
+      RABBITMQ_PASS: password
+      MONGO_URI: mongodb://root:example@mongodb:27017
+      QUEUE_NAME: queue_dude
+    volumes:
+      - shared-data:/shared-data  # Montar el volumen compartido
+    depends_on:
+      - rabbitmq
+      - mongodb
+      - postgres
 
 volumes:
   shared-data:

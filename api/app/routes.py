@@ -7,6 +7,7 @@ def initialize_routes(api: Api) -> None:
     api.add_resource(UserResource, '/api/v1/user', endpoint='user')
     api.add_resource(AuthResource, '/api/v1/auth', endpoint='auth')
     api.add_resource(ExportResource, '/api/v1/export/<string:task_id>', endpoint='export')
+    api.add_resource(DuplicateResource, '/api/v1/duplicate', endpoint='duplicate')
     
     # Admin resources
     api.add_resource(UserAdminResource, '/api/v1/admin/user', '/api/v1/admin/user/<int:user_id>', endpoint='admin_user')
