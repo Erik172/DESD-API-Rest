@@ -22,12 +22,18 @@ def process_file(task_id, file_path, filename, model, page):
     output_data, class_name = postprocess(results)
     data = {
         'task_id': task_id,
-        'filename': filename,
-        'page': page,
-        'confidence': float(output_data.max()),
-        'class_name': class_name,
-        'model': model,
-        'inference_time': inference_time
+        # 'filename': filename,
+        'nombre_archivo': filename,
+        # 'page': page,
+        'pagina': page,
+        # 'confidence': float(output_data.max()),
+        'confianza': float(output_data.max()),
+        # 'class_name': class_name,
+        'nombre_clase': class_name,
+        # 'model': model,
+        'modelo': model,
+        # 'inference_time': inference_time
+        'tiempo_inferencia': inference_time
     }
     
     # Guarda los resultados en MongoDB en la coleccion segun el task_id
