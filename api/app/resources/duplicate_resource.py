@@ -70,17 +70,17 @@ class DuplicateResource(Resource):
                 os.makedirs(f'/shared-data/{task_id}')
             
             if file_extension in VALID_DOCUMENT_EXTENSIONS:
+                if not os.path.exists(f'/shared-data/{task_id}/{filename}'):
+                    os.makedirs(f'/shared-data/{task_id}/{filename}')
+                    
                 start_time = time.time()
                 images = convert_file_grpc(file_bytes, filename)
                 print(f'File {filename} converted in {time.time() - start_time} seconds')
                 
                 for j, image_bytes in enumerate(images):  
-                    image_path = f'/shared-data/{task_id}/{filename}__page_{j+1}.jpg'
+                    image_path = f'/shared-data/{task_id}/{filename}/page_{j+1}.jpg'
                     with open(image_path, 'wb') as img_f:
                         img_f.write(image_bytes)
-                    
-            # os.remove(file.filename)
-            
             
         self._enqueue_tasks(task_id, f'/shared-data/{task_id}')   
         update_result_status(result_status.id, status=ResultStatusEnum.PENDING, total_files=len(files), last_updated=datetime.now())
