@@ -1,3 +1,3 @@
 from .database_service import DatabaseService
 from .messaging_service import MessagingService
-from .search_service import SearchService
+from .search_service import find_duplicate_pages
