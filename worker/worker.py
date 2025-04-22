@@ -26,8 +26,8 @@ def process_file(task_id, file_path, filename, model, page):
         'nombre_archivo': filename,
         # 'page': page,
         'pagina': page,
-        # 'confidence': float(output_data.max()),
-        'confianza': float(output_data.max()),
+        # 'confidence': f"{float(output_data.max()) * 100:.2f}%",
+        'confianza': f"{float(output_data.max()) * 100:.2f}%",
         # 'class_name': class_name,
         'nombre_clase': class_name,
         # 'model': model,
@@ -58,7 +58,22 @@ def postprocess(results):
     # Implementa la lógica de postprocesamiento aquí
     results = results[0][0]
     class_name = Config.metadata['names'][results.argmax()]
-
+    
+    class_translation = {
+        'tilted': 'inclinado',
+        'no tilted': 'no inclinado',
+        'rotated': 'rotado',
+        'no_rotated': 'no rotado',
+        'cut': 'con corte de informacion',
+        'no_cut': 'sin corte de informacion',
+    }
+    
+    # Traduce el nombre de la clase al español
+    if class_name in class_translation:
+        class_name = class_translation[class_name]
+    else:
+        class_name = class_name
+    
     return results, class_name
 
 def callback(ch, method, properties, body):
